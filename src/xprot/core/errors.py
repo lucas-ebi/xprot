@@ -1,12 +1,13 @@
 """Every exception X-Prot raises on bad input, in one place.
 
 All derive from :class:`XProtError` (itself a :class:`ValueError`), so a caller can catch the whole
-family with one ``except`` while the CLI still maps each subclass to its own exit code.
+family with one ``except`` while the CLI still maps each subclass to its own exit code. Import them
+from here, not from the module that raises them.
 """
 
 from __future__ import annotations
 
-__all__ = ["AlignmentError", "DesignError", "TreeError", "XProtError"]
+__all__ = ["AlignmentError", "ClassTableError", "DesignError", "TreeError", "XProtError"]
 
 
 class XProtError(ValueError):
@@ -23,3 +24,7 @@ class TreeError(XProtError):
 
 class DesignError(XProtError):
     """A transformation cannot be generated (bad representative, missing class table, ...)."""
+
+
+class ClassTableError(XProtError):
+    """A class-table file is malformed."""

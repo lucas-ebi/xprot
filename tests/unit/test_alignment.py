@@ -4,12 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from xprot.core.alignment import (
-    AlignmentError,
-    build_coordinate_map,
-    load_alignment,
-    parse_alignment,
-)
+from xprot.core.alignment import build_coordinate_map, load_alignment, parse_alignment
+from xprot.core.errors import AlignmentError
 from xprot.core.models import AmbiguityPolicy
 
 FASTA = ">s1 first\nA-CDE\n>s2 second\nARCDE\n>s3\nA-C.E\n"

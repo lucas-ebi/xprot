@@ -10,7 +10,7 @@ from pathlib import Path
 import xprot.core
 
 FORBIDDEN_IMPORTS = {"click", "fastapi", "uvicorn", "starlette"}
-FORBIDDEN_PREFIXES = ("xprot.cli", "xprot.gui")
+FORBIDDEN_PREFIXES = ("xprot.app", "xprot.cli", "xprot.gui")
 
 CORE_DIR = Path(xprot.core.__file__).parent
 

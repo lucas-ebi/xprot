@@ -7,13 +7,16 @@ outputs the substitutions (and insertions, and optionally deletions) that change
 representative into a sequence carrying the other clade's conserved residues — with the alignment,
 per-position frequencies, and rule that produced each change.
 
-Conservation is measured with full-alignment Henikoff & Henikoff position-based weights normalised
-to sum one; per clade, a residue whose weighted frequency exceeds 90% is "typical". In *expanded*
-mode the same test is applied to Taylor physicochemical classes and a concrete donor residue is
-chosen from the class. Runs are deterministic and every choice is set by an explicit configuration.
+Conservation is measured with full-alignment Henikoff & Henikoff position-based weights, with the
+gap treated as a state so the weights are normalised by construction. Per clade, a residue whose
+weighted frequency strictly exceeds a threshold (default `0.9`) is "typical". In *expanded* mode the
+same test is applied to Taylor physicochemical classes and a concrete donor residue is chosen from
+the class. Every choice is a plain function parameter with a default; runs are deterministic.
 
-**Status: early.** This repository contains the package skeleton, the configuration schema, and the
-typed interfaces. The analysis itself is not written yet.
+**Status: early.** The analysis pipeline is implemented as an importable library
+(`xprot.core`: alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and
+typicality, transformation-event generation, fixture comparison). Not yet built: the orchestration
+layer, output rendering, the `x-prot` command-line tool, and a browser UI.
 
 ## Install
 

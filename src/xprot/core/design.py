@@ -16,7 +16,7 @@ from xprot.core.structures import (
     TypicalStateSet,
 )
 
-__all__ = ["DesignError", "compare_with_fixture", "generate_transformation"]
+__all__ = ["compare_with_fixture", "generate_transformation"]
 
 _AA_ORDER = "ACDEFGHIKLMNPQRSTVWY"
 

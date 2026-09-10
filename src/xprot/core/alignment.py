@@ -16,7 +16,6 @@ __all__ = [
     "CANONICAL_GAP",
     "DEFAULT_ALPHABET",
     "DEFAULT_GAP_SYMBOLS",
-    "AlignmentError",
     "build_coordinate_map",
     "load_alignment",
     "parse_alignment",

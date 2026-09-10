@@ -10,7 +10,4 @@ from __future__ import annotations
 
 __version__ = "0.1.0"
 
-#: Label stamped on every result so a proposal is not mistaken for an empirical finding.
-RECONSTRUCTION_EVIDENCE_LABEL = "computational evidence"
-
-__all__ = ["RECONSTRUCTION_EVIDENCE_LABEL", "__version__"]
+__all__ = ["__version__"]

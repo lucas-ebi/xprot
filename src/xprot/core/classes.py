@@ -6,13 +6,9 @@ from pathlib import Path
 
 import yaml
 
-from xprot.core.errors import XProtError
+from xprot.core.errors import ClassTableError
 
-__all__ = ["ClassTableError", "load_class_table"]
-
-
-class ClassTableError(XProtError):
-    """A class-table file is malformed."""
+__all__ = ["load_class_table"]
 
 
 def load_class_table(path: Path | str) -> dict[str, str]:

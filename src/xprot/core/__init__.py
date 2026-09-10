@@ -1,6 +1,6 @@
-"""Typed models and deterministic computational functions.
+"""Typed data structures and the deterministic analysis functions.
 
-``xprot.core`` may import only the standard library, Biopython, Pydantic 2, and PyYAML. It must not
-import ``xprot.evidence``, ``xprot.cli``, ``xprot.gui``, or any CLI/GUI framework. This boundary is
-enforced by ``tests/unit/test_import_boundaries.py``.
+``xprot.core`` imports only the standard library, Biopython, NumPy, Pydantic, and PyYAML. It must
+not import ``xprot.app``, ``xprot.cli``, ``xprot.gui``, or any CLI/GUI/server framework. This
+boundary is checked by ``tests/unit/test_import_boundaries.py``.
 """
