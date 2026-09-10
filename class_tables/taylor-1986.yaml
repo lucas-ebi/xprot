@@ -1,0 +1,29 @@
+# Amino-acid physicochemical classes, used by X-Prot's "expanded" design mode.
+# Classes overlap by design; a residue may belong to several.
+#
+# Source: Taylor WR. (1986). The classification of amino acid conservation.
+# J Theor Biol, 119(2), 205-218. https://doi.org/10.1016/S0022-5193(86)80075-3
+
+name: taylor-1986
+version: "1"
+alphabet: ACDEFGHIKLMNPQRSTVWY
+
+classes:
+  Amide: NQ
+  Aliphatic: GAVLI
+  Basic: HKR
+  With hydroxyl: STY
+  With sulfur: CM
+  Non-polar: FGVLAIPMW
+  Polar: YSNTQC
+  Very hydrophobic: LIFWVM
+  Hydrophilic: RKNQPD
+  Positively charged: KR
+  Negatively charged: DE
+  Tiny: GAS
+  Small: CDPNT
+  Median: EVQH
+  Big: MILKR
+  Aromatic: FYW
+  Similar (Asn or Asp): ND
+  Similar (Gln or Glu): QE

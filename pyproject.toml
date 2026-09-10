@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xprot"
+version = "0.1.0"
+description = "Local, deterministic subfamily-conservation analysis for protein families."
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+readme = "README.md"
+authors = [
+    { name = "Lucas Carrijo de Oliveira", email = "lucas@ebi.ac.uk" },
+]
+keywords = ["bioinformatics", "protein", "alignment", "reproducibility", "phylogenetics"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Operating System :: POSIX",
+]
+dependencies = [
+    "biopython>=1.83",
+    "numpy>=1.26",
+    "pydantic>=2.6",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.10",
+    "ruff>=0.4",
+    "types-PyYAML>=6.0",
+]
+
+# The `x-prot` console entry point is added once the CLI exists.
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+xprot = ["py.typed"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["Bio.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+disallow_untyped_calls = false
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "PTH", "RUF", "ANN"]
+# ANN401: `typing.Any` is intentional in a few generic boundary helpers.
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+xfail_strict = true

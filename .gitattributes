@@ -1,0 +1,6 @@
+# Normalise line endings inside the repository to LF.
+* text=auto eol=lf
+
+# Deterministic archives and lockfiles are byte-sensitive; never touch them.
+uv.lock -text
+*.zip binary
