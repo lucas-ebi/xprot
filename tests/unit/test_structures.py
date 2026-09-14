@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from xprot.core.models import EventType, PartitionSemantics, SubfamilyLabel
+from xprot.core.primitives import EventType, PartitionSemantics, SubfamilyLabel
 from xprot.core.structures import (
     Alignment,
     AlignmentRow,

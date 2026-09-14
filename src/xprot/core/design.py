@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from xprot.core.errors import DesignError
-from xprot.core.models import DesignMode, Diagnostic, EventType, Severity, SubfamilyLabel
+from xprot.core.primitives import DesignMode, Diagnostic, EventType, Severity, SubfamilyLabel
 from xprot.core.structures import (
     Alignment,
     CanonicalPartition,

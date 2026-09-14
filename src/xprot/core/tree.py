@@ -10,7 +10,7 @@ from typing import Any
 from Bio import Phylo
 
 from xprot.core.errors import TreeError
-from xprot.core.models import PartitionSemantics, RootingMethod
+from xprot.core.primitives import PartitionSemantics, RootingMethod
 from xprot.core.structures import CanonicalPartition, NodeSelector, Phylogeny, TreeNode
 
 __all__ = ["load_tree", "parse_tree", "resolve_partition"]

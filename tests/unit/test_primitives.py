@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from xprot.core.models import Diagnostic, PartitionSemantics, Severity
+from xprot.core.primitives import Diagnostic, PartitionSemantics, Severity
 
 
 def test_diagnostic_is_frozen_and_rejects_unknown_fields() -> None:

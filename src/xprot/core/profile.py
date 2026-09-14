@@ -6,7 +6,7 @@ from collections.abc import Iterable, Mapping
 
 import numpy as np
 
-from xprot.core.models import Denominator, Diagnostic, Severity, SubfamilyLabel
+from xprot.core.primitives import Denominator, Diagnostic, Severity, SubfamilyLabel
 from xprot.core.structures import (
     Alignment,
     CanonicalPartition,

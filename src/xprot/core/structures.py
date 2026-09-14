@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from xprot.core.models import Diagnostic, EventType, PartitionSemantics, SubfamilyLabel
+from xprot.core.primitives import Diagnostic, EventType, PartitionSemantics, SubfamilyLabel
 
 __all__ = [
     "Alignment",

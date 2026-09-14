@@ -5,7 +5,7 @@
 ### Added
 
 - `uv`-locked package (canonical Python 3.11); strict `ruff` and `mypy`.
-- `xprot.core.models` — `Diagnostic`, `Severity`/`EventType`/`SubfamilyLabel` and the
+- `xprot.core.primitives` — `Diagnostic`, `Severity`/`EventType`/`SubfamilyLabel` and the
   parameter enums (`PartitionSemantics`, `RootingMethod`, `AmbiguityPolicy`, `Denominator`,
   `DesignMode`, `LabelSource`).
 - `xprot.core.errors` — one exception hierarchy (`XProtError` base; `AlignmentError`,
