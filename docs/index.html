@@ -22,70 +22,135 @@
   <!-- ── Controls sidebar ──────────────────────────────────────────── -->
   <aside class="controls">
     <form id="design-form" autocomplete="off">
-      <div class="ctrl-label">Alignment</div>
-      <div class="field">
-        <label for="aln-format">Format</label>
-        <select id="aln-format">
-          <option value="fasta" selected>FASTA</option>
-          <option value="stockholm">Stockholm</option>
-          <option value="clustal">Clustal</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="aln-file">File <span class="hint">(or paste below)</span></label>
-        <input type="file" id="aln-file">
-      </div>
-      <div class="field">
-        <textarea id="aln-text" rows="4" placeholder=">seqA&#10;MKV...&#10;>seqB&#10;MKV..." required></textarea>
-      </div>
-
-      <div class="ctrl-label" style="margin-top:0.5rem">Tree</div>
-      <div class="field">
-        <label for="tree-format">Format</label>
-        <select id="tree-format">
-          <option value="newick" selected>Newick</option>
-          <option value="nexus">Nexus</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="tree-file">File <span class="hint">(or paste below)</span></label>
-        <input type="file" id="tree-file">
-      </div>
-      <div class="field">
-        <textarea id="tree-text" rows="3" placeholder="((seqA,seqB),(seqC,seqD));" required></textarea>
-      </div>
-
-      <div class="ctrl-label" style="margin-top:0.5rem">Internal node</div>
-      <div class="field">
-        <label><input type="radio" name="node-mode" value="tips" id="node-mode-tips" checked> Tip ids</label>
-        <input type="text" id="node-tips" placeholder="seqA,seqB,seqC,seqD">
-      </div>
-      <div class="field">
-        <label><input type="radio" name="node-mode" value="label" id="node-mode-label"> Label</label>
-        <input type="text" id="node-label" placeholder="internal node label" disabled>
-      </div>
-
-      <div class="ctrl-label" style="margin-top:0.5rem">Representatives</div>
-      <div class="field">
-        <label for="recipient">Recipient id <span class="hint">(changed toward the donor)</span></label>
-        <input type="text" id="recipient" required>
-      </div>
-      <div class="field">
-        <label for="donor">Donor id</label>
-        <input type="text" id="donor" required>
-      </div>
-
-      <div>
-        <button type="submit" id="run-btn" disabled>
-          <div class="spinner"></div>
-          <span id="btn-label">Initialising…</span>
+      <section class="wiz-step" data-step="1">
+        <button type="button" class="wiz-header">
+          <span class="wiz-num">1</span>
+          <span class="wiz-title">Alignment</span>
+          <span class="wiz-summary"></span>
         </button>
-        <div id="status-line">
-          <div class="dot loading" id="status-dot"></div>
-          <span id="status-text">Loading Pyodide runtime</span>
-        </div>
-        <div id="warnings"></div>
-      </div>
+        <div class="wiz-collapse"><div class="wiz-body">
+          <div class="field">
+            <label for="aln-format">Format</label>
+            <select id="aln-format">
+              <option value="fasta" selected>FASTA</option>
+              <option value="stockholm">Stockholm</option>
+              <option value="clustal">Clustal</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>File</label>
+            <label class="dropzone" id="aln-dropzone">
+              <input type="file" id="aln-file" class="dropzone-input">
+              <svg class="dropzone-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10 3v9"/>
+                <path d="M6.5 6.5L10 3l3.5 3.5"/>
+                <path d="M3 13v2.5a1.5 1.5 0 001.5 1.5h11a1.5 1.5 0 001.5-1.5V13"/>
+              </svg>
+              <span>Drag &amp; drop a file, or <span class="dropzone-link">browse</span></span>
+            </label>
+            <div class="hint or-hint">or paste below</div>
+          </div>
+          <div class="field">
+            <textarea id="aln-text" rows="4" placeholder=">seqA&#10;MKV...&#10;>seqB&#10;MKV..." required></textarea>
+          </div>
+          <button type="button" class="wiz-next" data-next="2">Next</button>
+        </div></div>
+      </section>
+
+      <section class="wiz-step" data-step="2">
+        <button type="button" class="wiz-header">
+          <span class="wiz-num">2</span>
+          <span class="wiz-title">Tree</span>
+          <span class="wiz-summary"></span>
+        </button>
+        <div class="wiz-collapse"><div class="wiz-body">
+          <div class="field">
+            <label for="tree-format">Format</label>
+            <select id="tree-format">
+              <option value="newick" selected>Newick</option>
+              <option value="nexus">Nexus</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>File</label>
+            <label class="dropzone" id="tree-dropzone">
+              <input type="file" id="tree-file" class="dropzone-input">
+              <svg class="dropzone-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10 3v9"/>
+                <path d="M6.5 6.5L10 3l3.5 3.5"/>
+                <path d="M3 13v2.5a1.5 1.5 0 001.5 1.5h11a1.5 1.5 0 001.5-1.5V13"/>
+              </svg>
+              <span>Drag &amp; drop a file, or <span class="dropzone-link">browse</span></span>
+            </label>
+            <div class="hint or-hint">or paste below</div>
+          </div>
+          <div class="field">
+            <textarea id="tree-text" rows="3" placeholder="((seqA,seqB),(seqC,seqD));" required></textarea>
+          </div>
+          <button type="button" class="wiz-next" data-next="3">Next</button>
+        </div></div>
+      </section>
+
+      <section class="wiz-step" data-step="3">
+        <button type="button" class="wiz-header">
+          <span class="wiz-num">3</span>
+          <span class="wiz-title">Node &amp; representatives</span>
+          <span class="wiz-summary"></span>
+        </button>
+        <div class="wiz-collapse"><div class="wiz-body">
+          <p class="wiz-hint">Click an internal node in the tree to split it into two colored clades, then click any leaf to set the donor, then a leaf in the other clade to set the recipient.</p>
+          <ul class="wiz-checklist" id="wiz-checklist">
+            <li id="check-node">Internal node selected</li>
+            <li id="check-donor">Donor picked</li>
+            <li id="check-recipient">Recipient picked</li>
+          </ul>
+
+          <details class="det" style="margin-top:0.5rem">
+            <summary>Manual entry</summary>
+            <div class="det-inner">
+              <div class="ctrl-label">Internal node</div>
+              <div class="field">
+                <label><input type="radio" name="node-mode" value="tips" id="node-mode-tips" checked> Tip ids</label>
+                <input type="text" id="node-tips" placeholder="seqA,seqB,seqC,seqD">
+              </div>
+              <div class="field">
+                <label><input type="radio" name="node-mode" value="label" id="node-mode-label"> Label</label>
+                <input type="text" id="node-label" placeholder="internal node label" disabled>
+              </div>
+
+              <div class="ctrl-label" style="margin-top:0.5rem">Representatives</div>
+              <div class="field">
+                <label for="recipient">Recipient id <span class="hint">(changed toward the donor)</span></label>
+                <input type="text" id="recipient" required>
+              </div>
+              <div class="field">
+                <label for="donor">Donor id</label>
+                <input type="text" id="donor" required>
+              </div>
+            </div>
+          </details>
+        </div></div>
+      </section>
+
+      <section class="wiz-step" data-step="4">
+        <button type="button" class="wiz-header">
+          <span class="wiz-num">4</span>
+          <span class="wiz-title">Run</span>
+          <span class="wiz-summary"></span>
+        </button>
+        <div class="wiz-collapse"><div class="wiz-body">
+          <div class="wiz-run-summary" id="wiz-run-summary"></div>
+          <button type="submit" id="run-btn" disabled>
+            <div class="spinner"></div>
+            <span id="btn-label">Initialising…</span>
+          </button>
+          <div id="status-line">
+            <div class="dot loading" id="status-dot"></div>
+            <span id="status-text">Loading Pyodide runtime</span>
+          </div>
+          <div id="warnings"></div>
+        </div></div>
+      </section>
     </form>
 
     <div style="flex:1"></div>
@@ -115,12 +180,13 @@
 
   <!-- ── Workspace ─────────────────────────────────────────────────── -->
   <div class="workspace">
+    <div id="run-banner" class="run-banner" hidden>
+      <span id="run-banner-text"></span>
+      <button type="button" id="run-banner-close" aria-label="Dismiss">×</button>
+    </div>
     <div class="tab-bar" role="tablist">
       <button class="tab-btn active" data-tab="tree" onclick="switchTab(this)">Tree</button>
-      <button class="tab-btn" data-tab="pairwise" onclick="switchTab(this)">Pairwise</button>
-      <button class="tab-btn" data-tab="events" onclick="switchTab(this)">Events</button>
-      <button class="tab-btn" data-tab="diagnostics" onclick="switchTab(this)">Diagnostics</button>
-      <button class="tab-btn" data-tab="files" onclick="switchTab(this)">Output files</button>
+      <button class="tab-btn" data-tab="results" onclick="switchTab(this)">Results</button>
     </div>
 
     <!-- Tree -->
@@ -135,53 +201,64 @@
             <line x1="16" y1="36" x2="40" y2="36"/>
           </svg>
         </div>
-        <span id="msg-tree">Run a design to view the tree, with the recipient and donor clades highlighted</span>
+        <span id="msg-tree">Paste or upload a Newick tree in the sidebar to preview it — click an internal node with two child clades to select it, then click a leaf in each clade to set the donor and recipient.</span>
       </div>
       <div class="panel-content" id="panel-tree"></div>
     </div>
 
-    <!-- Pairwise -->
-    <div class="tab-panel" id="tab-pairwise">
-      <div class="empty-state" id="empty-pairwise">
-        <span id="msg-pairwise">Run a design to view the recipient vs. transformed sequence</span>
-      </div>
-      <div class="panel-content" id="panel-pairwise"></div>
-    </div>
-
-    <!-- Events -->
-    <div class="tab-panel" id="tab-events">
-      <div class="empty-state" id="empty-events">
-        <span id="msg-events">Run a design to view the proposed substitutions, insertions, and deletions</span>
-      </div>
-      <div class="panel-content" id="panel-events"></div>
-    </div>
-
-    <!-- Diagnostics -->
-    <div class="tab-panel" id="tab-diagnostics">
-      <div class="empty-state" id="empty-diagnostics">
-        <span id="msg-diagnostics">Run a design to view identifier-mapping and profile diagnostics</span>
-      </div>
-      <div class="panel-content" id="panel-diagnostics"></div>
-    </div>
-
-    <!-- Files -->
-    <div class="tab-panel" id="tab-files">
-      <div class="empty-state" id="empty-files">
-        <span>No output files generated yet</span>
-      </div>
-      <div class="files-content" id="files-content" style="display:none">
-        <table class="output-table">
-          <thead><tr><th>File</th><th></th><th></th></tr></thead>
-          <tbody id="output-tbody"></tbody>
-        </table>
-        <div id="file-preview">
-          <div id="file-preview-header">
-            <div class="preview-title" id="preview-title"></div>
-            <button id="preview-close" onclick="closePreview()" title="Close">×</button>
-          </div>
-          <div id="preview-content"></div>
+    <!-- Results: Summary, Pairwise, Events, Diagnostics, Output files, one scrollable page ── -->
+    <div class="tab-panel" id="tab-results">
+      <section class="result-section" id="section-summary">
+        <h2 class="result-heading">Summary</h2>
+        <div class="empty-state" id="empty-summary">
+          <span id="msg-summary">Run a design to see a summary of the result</span>
         </div>
-      </div>
+        <div class="panel-content" id="panel-summary"></div>
+      </section>
+
+      <section class="result-section" id="section-pairwise">
+        <h2 class="result-heading">Pairwise</h2>
+        <div class="empty-state" id="empty-pairwise">
+          <span id="msg-pairwise">Run a design to view the recipient vs. transformed sequence</span>
+        </div>
+        <div class="panel-content" id="panel-pairwise"></div>
+      </section>
+
+      <section class="result-section" id="section-events">
+        <h2 class="result-heading">Events</h2>
+        <div class="empty-state" id="empty-events">
+          <span id="msg-events">Run a design to view the proposed substitutions, insertions, and deletions</span>
+        </div>
+        <div class="panel-content" id="panel-events"></div>
+      </section>
+
+      <section class="result-section" id="section-diagnostics">
+        <h2 class="result-heading">Diagnostics</h2>
+        <div class="empty-state" id="empty-diagnostics">
+          <span id="msg-diagnostics">Run a design to view identifier-mapping and profile diagnostics</span>
+        </div>
+        <div class="panel-content" id="panel-diagnostics"></div>
+      </section>
+
+      <section class="result-section" id="section-files">
+        <h2 class="result-heading">Output files</h2>
+        <div class="empty-state" id="empty-files">
+          <span>No output files generated yet</span>
+        </div>
+        <div class="files-content" id="files-content" style="display:none">
+          <table class="output-table">
+            <thead><tr><th>File</th><th></th><th></th></tr></thead>
+            <tbody id="output-tbody"></tbody>
+          </table>
+          <div id="file-preview">
+            <div id="file-preview-header">
+              <div class="preview-title" id="preview-title"></div>
+              <button id="preview-close" onclick="closePreview()" title="Close">×</button>
+            </div>
+            <div id="preview-content"></div>
+          </div>
+        </div>
+      </section>
     </div>
   </div><!-- /workspace -->
 </div><!-- /workbench -->

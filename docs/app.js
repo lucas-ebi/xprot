@@ -12,11 +12,33 @@ function addWarning(msg) {
   return div;
 }
 
+function showRunBanner(msg) {
+  document.getElementById('run-banner-text').textContent = msg;
+  document.getElementById('run-banner').hidden = false;
+}
+function hideRunBanner() {
+  document.getElementById('run-banner').hidden = true;
+}
+document.getElementById('run-banner-close').addEventListener('click', hideRunBanner);
+
 function switchTab(btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+}
+
+function navigateToTab(tab) {
+  switchTab(document.querySelector(`.tab-btn[data-tab="${tab}"]`));
+}
+
+// The Summary's quick-nav (links, tiles, the donor/recipient flow, the bijective warning)
+// jumps into the Results page's relevant section, rather than switching a tab that no
+// longer exists for it — Pairwise/Events/Diagnostics/Output files are one scrolling page.
+function scrollToSection(section) {
+  navigateToTab('results');
+  const target = document.getElementById('section-' + section);
+  if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 // ── Worker setup ───────────────────────────────────────────────────────────
@@ -72,16 +94,347 @@ if (worker) {
   };
 }
 
-// ── File inputs: read an uploaded file into its paired textarea ────────────
+// ── File inputs: read an uploaded (or dropped) file into its paired textarea ──
+async function loadFileIntoTextarea(file, textareaId) {
+  if (!file) return;
+  const textarea = document.getElementById(textareaId);
+  textarea.value = await file.text();
+  textarea.dispatchEvent(new Event('input'));
+}
+
 function wireFileInput(fileId, textareaId) {
-  document.getElementById(fileId).addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById(textareaId).value = await file.text();
+  document.getElementById(fileId).addEventListener('change', e => {
+    loadFileIntoTextarea(e.target.files[0], textareaId);
   });
 }
+
+function wireDropZone(zoneId, textareaId) {
+  const zone = document.getElementById(zoneId);
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    loadFileIntoTextarea(e.dataTransfer.files[0], textareaId);
+  });
+}
+
 wireFileInput('aln-file', 'aln-text');
 wireFileInput('tree-file', 'tree-text');
+wireDropZone('aln-dropzone', 'aln-text');
+wireDropZone('tree-dropzone', 'tree-text');
+
+// ── Interactive tree: click an internal node, then click a leaf in each of its
+// two child clades to set recipient/donor, instead of typing ids. ─────────────
+const DEFAULT_TREE_MSG =
+  'Paste or upload a Newick tree in the sidebar to preview it — click an internal node with ' +
+  'two child clades to select it, then click a leaf in each clade to set the donor and recipient.';
+
+let selectedNodeKey = null;
+let recipientLeaf = null;
+let donorLeaf = null;
+let activeLeafPopover = null;
+let currentStep = 1;
+let viewStep = 1;
+
+function resetTreeSelection() {
+  selectedNodeKey = null;
+  recipientLeaf = null;
+  donorLeaf = null;
+  document.getElementById('recipient').value = '';
+  document.getElementById('donor').value = '';
+}
+
+function closeLeafPopover() {
+  if (!activeLeafPopover) return;
+  activeLeafPopover.el.remove();
+  document.removeEventListener('click', activeLeafPopover.onDocClick);
+  document.removeEventListener('keydown', activeLeafPopover.onKeydown);
+  activeLeafPopover = null;
+}
+
+// Donor is always picked before recipient (the trait being brought in, before who receives
+// it). A leaf already holding a role is "locked": clicking it only offers to clear that role,
+// rather than re-opening the full set-as menu — reassigning happens by picking a *different*
+// leaf in the same clade instead.
+function openLeafPopover(name, cladeIdx, clientX, clientY, donorClade) {
+  closeLeafPopover();
+  const isRecipient = recipientLeaf === name;
+  const isDonor = donorLeaf === name;
+
+  const pop = document.createElement('div');
+  pop.className = 'leaf-popover';
+  pop.style.left = clientX + 'px';
+  pop.style.top = clientY + 'px';
+
+  const addBtn = (label, onClick) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      onClick();
+      closeLeafPopover();
+      renderTreePreview();
+    });
+    pop.appendChild(btn);
+  };
+
+  if (isDonor) {
+    addBtn('Clear donor', () => { donorLeaf = null; document.getElementById('donor').value = ''; });
+  } else if (isRecipient) {
+    addBtn('Clear recipient', () => { recipientLeaf = null; document.getElementById('recipient').value = ''; });
+  } else if (donorLeaf === null || donorClade === cladeIdx) {
+    addBtn('Set as donor', () => { donorLeaf = name; document.getElementById('donor').value = name; });
+  } else {
+    addBtn('Set as recipient', () => { recipientLeaf = name; document.getElementById('recipient').value = name; });
+  }
+
+  document.body.appendChild(pop);
+  const onDocClick = e => { if (!pop.contains(e.target)) closeLeafPopover(); };
+  const onKeydown = e => { if (e.key === 'Escape') closeLeafPopover(); };
+  setTimeout(() => {
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKeydown);
+  }, 0);
+  activeLeafPopover = {el: pop, onDocClick, onKeydown};
+}
+
+function handleSelectNode(key) {
+  const reselecting = selectedNodeKey === key;
+  resetTreeSelection();
+  if (!reselecting) {
+    selectedNodeKey = key;
+    document.getElementById('node-mode-tips').checked = true;
+    document.getElementById('node-tips').value = key;
+    syncNodeMode();
+  }
+  renderTreePreview();
+}
+
+function renderTreePreview() {
+  closeLeafPopover();
+  const panel = document.getElementById('panel-tree');
+  const emptyState = document.getElementById('empty-tree');
+  const msg = document.getElementById('msg-tree');
+  const treeText = document.getElementById('tree-text').value;
+  const format = document.getElementById('tree-format').value;
+  panel.innerHTML = '';
+  panel.classList.remove('visible');
+
+  if (!treeText.trim()) {
+    msg.textContent = DEFAULT_TREE_MSG;
+    emptyState.style.display = '';
+    renderWizard();
+    return;
+  }
+  if (format !== 'newick') {
+    msg.textContent = 'Live preview is only available for Newick trees — run a design to see the result.';
+    emptyState.style.display = '';
+    renderWizard();
+    return;
+  }
+
+  let root;
+  try { root = parseNewick(treeText); }
+  catch (e) {
+    msg.textContent = 'Parse error: ' + e.message;
+    emptyState.style.display = '';
+    renderWizard();
+    return;
+  }
+
+  const selectedNode = findNodeByKey(root, selectedNodeKey);
+  if (selectedNodeKey && !selectedNode) resetTreeSelection();
+
+  const highlights = [];
+  const markers = [];
+  let isPickable = null;
+  let cladeOf = null;
+  let hintText = 'Click an internal node with two child clades to select it.';
+  let hintReady = false;
+
+  if (selectedNode && selectedNode.children.length === 2) {
+    const tips0 = new Set(leafNames(selectedNode.children[0]));
+    const tips1 = new Set(leafNames(selectedNode.children[1]));
+    cladeOf = name => (tips0.has(name) ? 0 : tips1.has(name) ? 1 : null);
+    const donorClade = cladeOf(donorLeaf);
+    const recipientClade = cladeOf(recipientLeaf);
+    // Donor is picked first, so its clade claims the donor color as soon as it's known.
+    const greenIdx = donorClade !== null ? donorClade : recipientClade !== null ? 1 - recipientClade : 1;
+    const blueIdx = 1 - greenIdx;
+    const cladeTips = [tips0, tips1];
+    highlights.push({tips: cladeTips[blueIdx], color: '#3b6fb6', label: 'Clade ' + (blueIdx + 1)});
+    highlights.push({tips: cladeTips[greenIdx], color: '#18974c', label: 'Clade ' + (greenIdx + 1)});
+    if (recipientLeaf) markers.push({tips: new Set([recipientLeaf]), badge: 'R', color: '#193f90'});
+    if (donorLeaf) markers.push({tips: new Set([donorLeaf]), badge: 'D', color: '#0a5032'});
+    isPickable = cladeOf;
+
+    if (!donorLeaf) {
+      hintText = `Node selected: ${tips0.size + tips1.size} tips, split into clades of `
+        + `${tips0.size} and ${tips1.size}. Click any leaf to set the donor.`;
+    } else if (!recipientLeaf) {
+      hintText = `Donor: ${donorLeaf} (green clade, ${cladeTips[greenIdx].size} tips). `
+        + `Click a leaf in the blue clade (${cladeTips[blueIdx].size} tips) to set the recipient.`;
+    } else {
+      hintText = `Donor: ${donorLeaf} · Recipient: ${recipientLeaf} — ready to run.`;
+      hintReady = true;
+    }
+  }
+
+  emptyState.style.display = 'none';
+  panel.classList.add('visible');
+  const hint = document.createElement('div');
+  hint.className = 'tree-hint' + (hintReady ? ' ready' : '');
+  hint.textContent = hintText;
+  panel.appendChild(hint);
+
+  renderTree(treeText, panel, highlights, {
+    markers,
+    selectedKey: selectedNodeKey,
+    isPickable,
+    onSelectNode: handleSelectNode,
+    onLeafClick: (name, cladeIdx, clientX, clientY) => {
+      openLeafPopover(name, cladeIdx, clientX, clientY, cladeOf(donorLeaf));
+    },
+  });
+
+  renderWizard();
+}
+
+// ── Sidebar wizard: stage Alignment / Tree / Node & representatives / Run,
+// one step visible at a time, with the interactive tree in the workspace always
+// live regardless of which step is expanded. ─────────────────────────────────
+function countFastaSequences(text) {
+  return (text.match(/^>/gm) || []).length;
+}
+
+function stepSummary(step) {
+  if (step === 1) {
+    const text = document.getElementById('aln-text').value;
+    if (document.getElementById('aln-format').value === 'fasta') {
+      const n = countFastaSequences(text);
+      if (n) return `${n} sequence${n === 1 ? '' : 's'}`;
+    }
+    return 'content added';
+  }
+  if (step === 2) {
+    const text = document.getElementById('tree-text').value;
+    if (document.getElementById('tree-format').value === 'newick') {
+      try {
+        const n = leafNames(parseNewick(text)).length;
+        return `${n} tip${n === 1 ? '' : 's'}`;
+      } catch (e) { /* fall through to the generic summary below */ }
+    }
+    return 'content added';
+  }
+  const recipientVal = document.getElementById('recipient').value.trim();
+  const donorVal = document.getElementById('donor').value.trim();
+  return recipientVal && donorVal ? `${donorVal} → ${recipientVal}` : '';
+}
+
+// Whichever ids the run will actually use — the "Internal node" fields are shared between
+// clicking the tree (which writes into them) and typing them directly (Manual entry).
+function nodeSelectorFilled() {
+  const byTips = document.getElementById('node-mode-tips').checked;
+  return byTips
+    ? document.getElementById('node-tips').value.trim() !== ''
+    : document.getElementById('node-label').value.trim() !== '';
+}
+
+function stepReady(step) {
+  if (step === 1) return document.getElementById('aln-text').value.trim() !== '';
+  if (step === 2) {
+    const text = document.getElementById('tree-text').value;
+    if (!text.trim()) return false;
+    if (document.getElementById('tree-format').value !== 'newick') return true;
+    try { return leafNames(parseNewick(text)).length > 0; } catch (e) { return false; }
+  }
+  if (step === 3) {
+    return nodeSelectorFilled()
+      && document.getElementById('recipient').value.trim() !== ''
+      && document.getElementById('donor').value.trim() !== '';
+  }
+  return true;
+}
+
+function goToStep(step) {
+  currentStep = Math.max(currentStep, step);
+  viewStep = step;
+  renderWizard();
+}
+
+function renderWizard() {
+  // The moment node+recipient+donor are all picked for the first time, move on to Run —
+  // but only while step 3 is still the frontier, so navigating back to review/edit it
+  // later doesn't keep bouncing the view forward.
+  if (viewStep === 3 && currentStep === 3 && stepReady(3)) {
+    goToStep(4);
+    return;
+  }
+
+  document.querySelectorAll('.wiz-step').forEach(section => {
+    const step = Number(section.dataset.step);
+    const state = step > currentStep ? 'pending' : step === viewStep ? 'active' : 'done';
+    section.dataset.state = state;
+    section.querySelector('.wiz-summary').textContent = state === 'done' ? stepSummary(step) : '';
+    section.querySelector('.wiz-num').textContent = state === 'done' ? '✓' : String(step);
+    const nextBtn = section.querySelector('.wiz-next');
+    if (nextBtn) nextBtn.disabled = !stepReady(step);
+  });
+
+  const recipientVal = document.getElementById('recipient').value.trim();
+  const donorVal = document.getElementById('donor').value.trim();
+  document.getElementById('check-node').classList.toggle('done', nodeSelectorFilled());
+  document.getElementById('check-recipient').classList.toggle('done', !!recipientVal);
+  document.getElementById('check-donor').classList.toggle('done', !!donorVal);
+
+  const runSummary = document.getElementById('wiz-run-summary');
+  if (nodeSelectorFilled() && recipientVal && donorVal) {
+    const byTips = document.getElementById('node-mode-tips').checked;
+    const nodeDesc = byTips
+      ? `${document.getElementById('node-tips').value.split(',').filter(Boolean).length} tips`
+      : `label "${document.getElementById('node-label').value}"`;
+    runSummary.textContent = `Node: ${nodeDesc} · Donor: ${donorVal} · Recipient: ${recipientVal}`;
+    runSummary.classList.add('ready');
+  } else {
+    runSummary.textContent = 'Select a node and representatives in the Tree tab.';
+    runSummary.classList.remove('ready');
+  }
+}
+
+document.querySelectorAll('.wiz-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const section = header.closest('.wiz-step');
+    if (section.dataset.state === 'done') goToStep(Number(section.dataset.step));
+  });
+});
+document.querySelectorAll('.wiz-next').forEach(btn => {
+  btn.addEventListener('click', () => goToStep(Number(btn.dataset.next)));
+});
+document.getElementById('aln-text').addEventListener('input', renderWizard);
+document.getElementById('aln-format').addEventListener('change', renderWizard);
+['node-tips', 'node-label', 'recipient', 'donor'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderWizard);
+});
+['node-mode-tips', 'node-mode-label'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderWizard);
+});
+
+let treePreviewDebounce = null;
+document.getElementById('tree-text').addEventListener('input', () => {
+  resetTreeSelection();
+  clearTimeout(treePreviewDebounce);
+  treePreviewDebounce = setTimeout(renderTreePreview, 150);
+});
+document.getElementById('tree-format').addEventListener('change', () => {
+  resetTreeSelection();
+  renderTreePreview();
+});
+renderTreePreview();
 
 // ── Node-selector radio toggle ──────────────────────────────────────────────
 function syncNodeMode() {
@@ -121,14 +474,15 @@ async function runDesign() {
   setStatus('Running design…');
   textCache.clear();
   closePreview();
+  hideRunBanner();
   document.getElementById('warnings').innerHTML = '';
 
-  ['panel-tree', 'panel-pairwise', 'panel-events', 'panel-diagnostics'].forEach(id => {
+  ['panel-summary', 'panel-pairwise', 'panel-events', 'panel-diagnostics'].forEach(id => {
     const el = document.getElementById(id);
     el.innerHTML = '';
     el.classList.remove('visible');
   });
-  ['tree', 'pairwise', 'events', 'diagnostics'].forEach(t => {
+  ['summary', 'pairwise', 'events', 'diagnostics'].forEach(t => {
     document.getElementById('empty-' + t).style.display = '';
   });
   document.getElementById('files-content').style.display = 'none';
@@ -168,16 +522,16 @@ async function runDesign() {
       addWarning('The alignment and tree identifiers do not map one-to-one; see Diagnostics.');
     }
 
-    const recipientInA = summary.subfamily_a_tips.includes(summary.recipient_id);
-    const recipientTips = new Set(recipientInA ? summary.subfamily_a_tips : summary.subfamily_b_tips);
-    const donorTips = new Set(recipientInA ? summary.subfamily_b_tips : summary.subfamily_a_tips);
-    document.getElementById('empty-tree').style.display = 'none';
-    const treePanel = document.getElementById('panel-tree');
-    treePanel.classList.add('visible');
-    renderTree(treeText, treePanel, [
-      {tips: recipientTips, color: '#3b6fb6', label: `Recipient clade (${summary.recipient_id})`},
-      {tips: donorTips, color: '#18974c', label: `Donor clade (${summary.donor_id})`},
-    ]);
+    selectedNodeKey = [...summary.subfamily_a_tips, ...summary.subfamily_b_tips].sort().join(',');
+    recipientLeaf = summary.recipient_id;
+    donorLeaf = summary.donor_id;
+    renderTreePreview();
+
+    document.getElementById('empty-summary').style.display = 'none';
+    const summaryPanel = document.getElementById('panel-summary');
+    summaryPanel.classList.add('visible');
+    renderSummary(summary, summaryPanel, scrollToSection);
+    navigateToTab('results');
 
     document.getElementById('empty-pairwise').style.display = 'none';
     const pairwisePanel = document.getElementById('panel-pairwise');
@@ -187,17 +541,19 @@ async function runDesign() {
     document.getElementById('empty-events').style.display = 'none';
     const eventsPanel = document.getElementById('panel-events');
     eventsPanel.classList.add('visible');
-    renderObjectTable(await getFileText('events.json'), eventsPanel, 'No changes proposed: the clades already agree at every position.');
+    renderEvents(await getFileText('events.json'), eventsPanel, 'No changes proposed: the clades already agree at every position.');
 
     document.getElementById('empty-diagnostics').style.display = 'none';
     const diagPanel = document.getElementById('panel-diagnostics');
     diagPanel.classList.add('visible');
-    renderObjectTable(await getFileText('diagnostics.json'), diagPanel, 'No diagnostics.');
-
-    setStatus(
-      `${summary.substitutions} substitutions, ${summary.insertions} insertions, ${summary.deletions} deletions`,
-      'ready'
+    renderObjectTable(
+      await getFileText('diagnostics.json'), diagPanel,
+      'No issues — the alignment and tree identifiers matched exactly, and every column and change was used as proposed.'
     );
+
+    const resultText = `${summary.substitutions} substitutions, ${summary.insertions} insertions, ${summary.deletions} deletions`;
+    setStatus(resultText, 'ready');
+    showRunBanner(`✓ Design complete — ${resultText}`);
 
   } catch (err) {
     setStatus('Error: ' + err.message, 'error');
