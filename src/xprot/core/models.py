@@ -22,16 +22,13 @@ __all__ = [
     "Denominator",
     "DesignMode",
     "Diagnostic",
-    "Direction",
     "EventType",
     "FrozenModel",
     "LabelSource",
     "PartitionSemantics",
-    "Role",
     "RootingMethod",
     "Severity",
     "SubfamilyLabel",
-    "sort_diagnostics",
 ]
 
 
@@ -95,22 +92,11 @@ class SubfamilyLabel(StrEnum):
     B = "subfamily_b"
 
 
-class Direction(StrEnum):
-    A_RECEIVES_B = "A_receives_B"
-    B_RECEIVES_A = "B_receives_A"
-
-
-class Role(StrEnum):
-    RECIPIENT = "recipient"
-    DONOR = "donor"
-
-
 class Diagnostic(FrozenModel):
     """A stable, machine-keyed report of one validation or computation condition.
 
-    ``code`` is the machine key; ``message`` and ``remediation`` are human text and must never be
-    parsed. ``ids`` and ``columns`` locate the condition (canonical IDs and 1-based alignment
-    columns).
+    ``code`` is the machine key; ``message`` is human text and must never be parsed. ``ids`` and
+    ``columns`` locate the condition (canonical IDs and 1-based alignment columns).
     """
 
     code: str
@@ -119,15 +105,3 @@ class Diagnostic(FrozenModel):
     message: str
     ids: tuple[str, ...] = ()
     columns: tuple[int, ...] = ()
-    remediation: str | None = None
-
-    @property
-    def sort_key(self) -> tuple[int, str, tuple[str, ...], tuple[int, ...], str]:
-        """Canonical order key: severity, then code, ids, columns, message."""
-        severity_rank = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}[self.severity]
-        return (severity_rank, self.code, self.ids, self.columns, self.message)
-
-
-def sort_diagnostics(diagnostics: list[Diagnostic]) -> list[Diagnostic]:
-    """Return ``diagnostics`` in canonical order without mutating the input."""
-    return sorted(diagnostics, key=lambda diagnostic: diagnostic.sort_key)

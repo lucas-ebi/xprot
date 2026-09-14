@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from xprot.core.models import EventType, PartitionSemantics, SubfamilyLabel
-from xprot.core.serialize import canonical_json
 from xprot.core.structures import (
     Alignment,
     AlignmentRow,
@@ -79,7 +76,7 @@ def test_typical_state_set_lookup() -> None:
     assert tss.for_column(1, SubfamilyLabel.B) == frozenset({"K"})
 
 
-def test_transformed_result_counts_and_json() -> None:
+def test_transformed_result_counts() -> None:
     events = (
         TransformationEvent(
             ordinal=1,
@@ -110,9 +107,6 @@ def test_transformed_result_counts_and_json() -> None:
     )
     result = TransformedResult("recip", "donor", "AAII", "AAAIG", "AA-II", "AAAIG", events)
     assert (result.substitutions, result.insertions, result.deletions) == (1, 1, 0)
-    payload = json.loads(canonical_json(result))
-    assert payload["events"][0]["donor_frequency"] == 0.9
-    assert payload["recipient_id"] == "recip"
 
 
 def test_sequence_weight_is_frozen() -> None:

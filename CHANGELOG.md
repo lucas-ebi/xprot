@@ -9,8 +9,7 @@
   parameter enums (`PartitionSemantics`, `RootingMethod`, `AmbiguityPolicy`, `Denominator`,
   `DesignMode`, `LabelSource`).
 - `xprot.core.errors` — one exception hierarchy (`XProtError` base; `AlignmentError`,
-  `TreeError`, `DesignError`).
-- `xprot.core.serialize` — canonical JSON and TSV emitters.
+  `TreeError`, `DesignError`, `ClassTableError`).
 - `xprot.core.structures` — frozen dataclasses for the pipeline (alignment, tree, partition,
   weights, profiles, typical states, transformation events and result).
 - The analysis pipeline, all taking plain keyword parameters (no config object):
