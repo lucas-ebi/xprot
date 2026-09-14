@@ -37,7 +37,13 @@
   one-to-one or the node can't be resolved, `5` the transformation can't be computed.
 - `load_alignment` / `load_tree` now wrap a missing or unreadable file in `AlignmentError` /
   `TreeError` instead of letting `OSError` escape uncaught.
+- `docs/` — a static browser UI (no build step, no server) running the unmodified `xprot` package
+  in a Web Worker via Pyodide: `worker.js` fetches `src/xprot/**.py` into Pyodide's virtual
+  filesystem and calls `run_design` and `xprot.render`'s renderers directly; `app.js`/`index.html`
+  provide the form and results tabs (tree with recipient/donor clades highlighted, pairwise view,
+  events, diagnostics, output files); `renderers.js` draws the tree as a hand-rolled SVG cladogram
+  (no charting library). Published on GitHub Pages from `/docs`.
 
 ### Not yet done
 
-- A contract test against an external reference alignment/tree; a browser UI.
+- A contract test against an external reference alignment/tree.

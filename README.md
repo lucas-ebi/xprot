@@ -16,8 +16,8 @@ the class. Every choice is a plain function parameter with a default; runs are d
 **Status: early.** The analysis pipeline is implemented as an importable library
 (`xprot.core`: alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and
 typicality, transformation-event generation, fixture comparison), `xprot.app.run_design`, which
-chains the whole pipeline behind one call, `xprot.render`'s deterministic output renderers, and the
-`x-prot` command-line tool. Not yet built: a browser UI.
+chains the whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the
+`x-prot` command-line tool, and a static browser UI (`docs/`) running the same package in-browser.
 
 ## Install
 
@@ -47,6 +47,20 @@ x-prot design \
 become the subfamilies. Add `--dry-run` to compute and print a one-line summary without writing
 `results/`. On success, `--out` receives `transformed.fasta`, `events.tsv`, `events.json`,
 `pairwise.txt`, `summary.json`, and `diagnostics.json`.
+
+### Browser UI
+
+`docs/` is a static site (no build step, no server) that runs the same package as the CLI, in a
+Web Worker, via [Pyodide](https://pyodide.org):
+
+```sh
+python -m http.server     # from the repository root
+```
+
+then open `http://localhost:8000/docs/`. Paste or upload an alignment and a tree, pick the
+internal node and the recipient/donor ids, and run — everything executes locally in the browser;
+nothing is uploaded. The first run downloads the Python packages Pyodide needs; later runs use the
+browser cache. Published on GitHub Pages from `/docs` on `main`.
 
 ## References
 

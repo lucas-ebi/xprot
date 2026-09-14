@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X-Prot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>X-Prot</h1>
+  <nav>
+    <a href="https://github.com/lucas-ebi/xprot" target="_blank" rel="noopener" aria-label="GitHub repository">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    </a>
+  </nav>
+</header>
+
+<div class="workbench">
+
+  <!-- ── Controls sidebar ──────────────────────────────────────────── -->
+  <aside class="controls">
+    <form id="design-form" autocomplete="off">
+      <div class="ctrl-label">Alignment</div>
+      <div class="field">
+        <label for="aln-format">Format</label>
+        <select id="aln-format">
+          <option value="fasta" selected>FASTA</option>
+          <option value="stockholm">Stockholm</option>
+          <option value="clustal">Clustal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="aln-file">File <span class="hint">(or paste below)</span></label>
+        <input type="file" id="aln-file">
+      </div>
+      <div class="field">
+        <textarea id="aln-text" rows="4" placeholder=">seqA&#10;MKV...&#10;>seqB&#10;MKV..." required></textarea>
+      </div>
+
+      <div class="ctrl-label" style="margin-top:0.5rem">Tree</div>
+      <div class="field">
+        <label for="tree-format">Format</label>
+        <select id="tree-format">
+          <option value="newick" selected>Newick</option>
+          <option value="nexus">Nexus</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tree-file">File <span class="hint">(or paste below)</span></label>
+        <input type="file" id="tree-file">
+      </div>
+      <div class="field">
+        <textarea id="tree-text" rows="3" placeholder="((seqA,seqB),(seqC,seqD));" required></textarea>
+      </div>
+
+      <div class="ctrl-label" style="margin-top:0.5rem">Internal node</div>
+      <div class="field">
+        <label><input type="radio" name="node-mode" value="tips" id="node-mode-tips" checked> Tip ids</label>
+        <input type="text" id="node-tips" placeholder="seqA,seqB,seqC,seqD">
+      </div>
+      <div class="field">
+        <label><input type="radio" name="node-mode" value="label" id="node-mode-label"> Label</label>
+        <input type="text" id="node-label" placeholder="internal node label" disabled>
+      </div>
+
+      <div class="ctrl-label" style="margin-top:0.5rem">Representatives</div>
+      <div class="field">
+        <label for="recipient">Recipient id <span class="hint">(changed toward the donor)</span></label>
+        <input type="text" id="recipient" required>
+      </div>
+      <div class="field">
+        <label for="donor">Donor id</label>
+        <input type="text" id="donor" required>
+      </div>
+
+      <div>
+        <button type="submit" id="run-btn" disabled>
+          <div class="spinner"></div>
+          <span id="btn-label">Initialising…</span>
+        </button>
+        <div id="status-line">
+          <div class="dot loading" id="status-dot"></div>
+          <span id="status-text">Loading Pyodide runtime</span>
+        </div>
+        <div id="warnings"></div>
+      </div>
+    </form>
+
+    <div style="flex:1"></div>
+
+    <details class="det">
+      <summary>About X-Prot</summary>
+      <div class="det-inner">
+        <p class="about-text">
+          X-Prot picks an internal node of a phylogenetic tree and one representative sequence
+          from each of its two child clades. It computes weighted residue conservation per clade
+          and proposes the substitutions, insertions, and deletions that change one representative
+          into a sequence carrying the other clade's conserved residues.
+        </p>
+        <p class="about-text">
+          See the <a href="https://github.com/lucas-ebi/xprot#x-prot" target="_blank" rel="noopener">README</a>
+          for the underlying methodology and references.
+        </p>
+        <p class="note">
+          Runs locally in the browser via
+          <a href="https://pyodide.org" target="_blank" rel="noopener">Pyodide</a>.
+          No data are uploaded. The first run downloads Python packages; later runs use the
+          browser cache.
+        </p>
+      </div>
+    </details>
+  </aside>
+
+  <!-- ── Workspace ─────────────────────────────────────────────────── -->
+  <div class="workspace">
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" data-tab="tree" onclick="switchTab(this)">Tree</button>
+      <button class="tab-btn" data-tab="pairwise" onclick="switchTab(this)">Pairwise</button>
+      <button class="tab-btn" data-tab="events" onclick="switchTab(this)">Events</button>
+      <button class="tab-btn" data-tab="diagnostics" onclick="switchTab(this)">Diagnostics</button>
+      <button class="tab-btn" data-tab="files" onclick="switchTab(this)">Output files</button>
+    </div>
+
+    <!-- Tree -->
+    <div class="tab-panel active" id="tab-tree">
+      <div class="empty-state" id="empty-tree">
+        <div class="empty-glyph">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="#595c56" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="4"  y1="22" x2="16" y2="22"/>
+            <line x1="16" y1="8"  x2="16" y2="36"/>
+            <line x1="16" y1="8"  x2="40" y2="8"/>
+            <line x1="16" y1="22" x2="40" y2="22"/>
+            <line x1="16" y1="36" x2="40" y2="36"/>
+          </svg>
+        </div>
+        <span id="msg-tree">Run a design to view the tree, with the recipient and donor clades highlighted</span>
+      </div>
+      <div class="panel-content" id="panel-tree"></div>
+    </div>
+
+    <!-- Pairwise -->
+    <div class="tab-panel" id="tab-pairwise">
+      <div class="empty-state" id="empty-pairwise">
+        <span id="msg-pairwise">Run a design to view the recipient vs. transformed sequence</span>
+      </div>
+      <div class="panel-content" id="panel-pairwise"></div>
+    </div>
+
+    <!-- Events -->
+    <div class="tab-panel" id="tab-events">
+      <div class="empty-state" id="empty-events">
+        <span id="msg-events">Run a design to view the proposed substitutions, insertions, and deletions</span>
+      </div>
+      <div class="panel-content" id="panel-events"></div>
+    </div>
+
+    <!-- Diagnostics -->
+    <div class="tab-panel" id="tab-diagnostics">
+      <div class="empty-state" id="empty-diagnostics">
+        <span id="msg-diagnostics">Run a design to view identifier-mapping and profile diagnostics</span>
+      </div>
+      <div class="panel-content" id="panel-diagnostics"></div>
+    </div>
+
+    <!-- Files -->
+    <div class="tab-panel" id="tab-files">
+      <div class="empty-state" id="empty-files">
+        <span>No output files generated yet</span>
+      </div>
+      <div class="files-content" id="files-content" style="display:none">
+        <table class="output-table">
+          <thead><tr><th>File</th><th></th><th></th></tr></thead>
+          <tbody id="output-tbody"></tbody>
+        </table>
+        <div id="file-preview">
+          <div id="file-preview-header">
+            <div class="preview-title" id="preview-title"></div>
+            <button id="preview-close" onclick="closePreview()" title="Close">×</button>
+          </div>
+          <div id="preview-content"></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /workspace -->
+</div><!-- /workbench -->
+
+<footer>
+  X-Prot v0.1.0 &nbsp;·&nbsp;
+  <a href="https://github.com/lucas-ebi/xprot#citation" target="_blank" rel="noopener">How to cite</a>
+  &nbsp;·&nbsp; GPL-3.0
+</footer>
+
+<script src="renderers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
