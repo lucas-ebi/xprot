@@ -10,7 +10,7 @@
   `DesignMode`, `LabelSource`).
 - `xprot.core.errors` — one exception hierarchy (`XProtError` base; `AlignmentError`,
   `TreeError`, `DesignError`, `ClassTableError`).
-- `xprot.core.structures` — frozen dataclasses for the pipeline (alignment, tree, partition,
+- `xprot.core.models` — frozen dataclasses for the pipeline (alignment, tree, partition,
   weights, profiles, typical states, transformation events and result).
 - The analysis pipeline, all taking plain keyword parameters (no config object):
   - `alignment.load_alignment` / `parse_alignment` (FASTA/Stockholm/Clustal via Biopython),

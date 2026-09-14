@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from xprot.core.structures import Alignment, SequenceWeight
+from xprot.core.models import Alignment, SequenceWeight
 
 __all__ = ["calculate_henikoff_weights"]
 

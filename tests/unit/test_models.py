@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from xprot.core.primitives import EventType, PartitionSemantics, SubfamilyLabel
-from xprot.core.structures import (
+from xprot.core.models import (
     Alignment,
     AlignmentRow,
     CanonicalPartition,
@@ -15,6 +14,7 @@ from xprot.core.structures import (
     TypicalState,
     TypicalStateSet,
 )
+from xprot.core.primitives import EventType, PartitionSemantics, SubfamilyLabel
 
 GAPS = frozenset("-")
 

@@ -6,8 +6,7 @@ from collections.abc import Iterable, Mapping
 
 import numpy as np
 
-from xprot.core.primitives import Denominator, Diagnostic, Severity, SubfamilyLabel
-from xprot.core.structures import (
+from xprot.core.models import (
     Alignment,
     CanonicalPartition,
     ClassProfile,
@@ -17,6 +16,7 @@ from xprot.core.structures import (
     TypicalState,
     TypicalStateSet,
 )
+from xprot.core.primitives import Denominator, Diagnostic, Severity, SubfamilyLabel
 
 __all__ = ["DEFAULT_THRESHOLD", "calculate_profiles", "determine_typical_states"]
 

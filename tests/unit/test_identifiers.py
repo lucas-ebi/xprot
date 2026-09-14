@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from xprot.core.alignment import parse_alignment
 from xprot.core.identifiers import resolve_id_mapping
+from xprot.core.models import Alignment, Phylogeny
 from xprot.core.primitives import LabelSource
-from xprot.core.structures import Alignment, Phylogeny
 from xprot.core.tree import parse_tree
 
 

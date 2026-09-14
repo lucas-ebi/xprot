@@ -7,8 +7,8 @@ through an alias table). The alignment rows and tree tips must map one-to-one ov
 
 from __future__ import annotations
 
+from xprot.core.models import Alignment, Phylogeny
 from xprot.core.primitives import Diagnostic, FrozenModel, LabelSource, Severity
-from xprot.core.structures import Alignment, Phylogeny
 
 __all__ = ["IdentifierMapping", "IdentifierRecord", "resolve_id_mapping"]
 

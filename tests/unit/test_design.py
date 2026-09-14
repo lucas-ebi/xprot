@@ -5,14 +5,14 @@ import pytest
 from xprot.core.alignment import parse_alignment
 from xprot.core.design import compare_with_fixture, generate_transformation
 from xprot.core.errors import DesignError
-from xprot.core.primitives import DesignMode
-from xprot.core.profile import calculate_profiles, determine_typical_states
-from xprot.core.structures import (
+from xprot.core.models import (
     CanonicalPartition,
     NodeSelector,
     SequenceWeight,
     TransformedResult,
 )
+from xprot.core.primitives import DesignMode
+from xprot.core.profile import calculate_profiles, determine_typical_states
 from xprot.core.tree import parse_tree, resolve_partition
 from xprot.core.weights import calculate_henikoff_weights
 

@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from xprot.core.errors import TreeError
+from xprot.core.models import NodeSelector, Phylogeny
 from xprot.core.primitives import PartitionSemantics, RootingMethod
-from xprot.core.structures import NodeSelector, Phylogeny
 from xprot.core.tree import load_tree, parse_tree, resolve_partition
 
 

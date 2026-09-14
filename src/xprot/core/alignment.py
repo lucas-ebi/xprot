@@ -9,8 +9,8 @@ from pathlib import Path
 from Bio import AlignIO
 
 from xprot.core.errors import AlignmentError
+from xprot.core.models import Alignment, AlignmentRow, CoordinateMap
 from xprot.core.primitives import AmbiguityPolicy
-from xprot.core.structures import Alignment, AlignmentRow, CoordinateMap
 
 __all__ = [
     "CANONICAL_GAP",
