@@ -28,8 +28,16 @@
 - `xprot.app.run_design` — chains the pipeline (load → id-map → partition → weights → profiles →
   typicality → transformation) behind one call; `class_table` accepts a mapping or a path.
   Raises `IdentifierError` if the alignment and tree do not map one-to-one.
+- `xprot.render` — deterministic byte renderers: `render_events_tsv` / `render_events_json`,
+  `render_transformed_fasta`, `render_pairwise` (recipient vs. transformed, with a marker line
+  over each change), `render_summary_json`, `render_diagnostics_json`.
+- `x-prot design` — the CLI (stdlib `argparse`, no dependency added): `--alignment`, `--tree`,
+  `--node-tips`/`--node-label`, `--recipient`, `--donor`, `--out`, `--dry-run`. Exit codes:
+  `0` success, `2` usage, `3` alignment/tree/class-table parse failure, `4` identifiers don't map
+  one-to-one or the node can't be resolved, `5` the transformation can't be computed.
+- `load_alignment` / `load_tree` now wrap a missing or unreadable file in `AlignmentError` /
+  `TreeError` instead of letting `OSError` escape uncaught.
 
 ### Not yet done
 
-- Output rendering, the `x-prot` CLI, and a contract test against an external reference
-  alignment/tree.
+- A contract test against an external reference alignment/tree; a browser UI.

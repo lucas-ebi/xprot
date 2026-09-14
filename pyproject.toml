@@ -38,7 +38,8 @@ dev = [
     "types-PyYAML>=6.0",
 ]
 
-# The `x-prot` console entry point is added once the CLI exists.
+[project.scripts]
+x-prot = "xprot.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

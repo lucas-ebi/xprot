@@ -15,9 +15,9 @@ the class. Every choice is a plain function parameter with a default; runs are d
 
 **Status: early.** The analysis pipeline is implemented as an importable library
 (`xprot.core`: alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and
-typicality, transformation-event generation, fixture comparison), plus `xprot.app.run_design`,
-which chains the whole pipeline behind one call. Not yet built: output rendering, the `x-prot`
-command-line tool, and a browser UI.
+typicality, transformation-event generation, fixture comparison), `xprot.app.run_design`, which
+chains the whole pipeline behind one call, `xprot.render`'s deterministic output renderers, and the
+`x-prot` command-line tool. Not yet built: a browser UI.
 
 ## Install
 
@@ -32,6 +32,21 @@ Without `uv`:
 python3.11 -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"
 ```
+
+## Usage
+
+```sh
+x-prot design \
+  --alignment family.fasta --tree family.nwk \
+  --node-tips seqA,seqB,seqC,seqD \
+  --recipient seqA --donor seqC \
+  --out results/
+```
+
+`--node-tips` (comma-separated) or `--node-label` selects the internal node; its two child clades
+become the subfamilies. Add `--dry-run` to compute and print a one-line summary without writing
+`results/`. On success, `--out` receives `transformed.fasta`, `events.tsv`, `events.json`,
+`pairwise.txt`, `summary.json`, and `diagnostics.json`.
 
 ## References
 
