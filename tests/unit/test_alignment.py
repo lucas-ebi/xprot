@@ -69,6 +69,11 @@ def test_load_alignment_infers_format_from_suffix(tmp_path: Path) -> None:
         load_alignment(bad)
 
 
+def test_load_alignment_missing_file_is_an_alignment_error(tmp_path: Path) -> None:
+    with pytest.raises(AlignmentError):
+        load_alignment(tmp_path / "missing.fasta")
+
+
 def test_build_coordinate_map_delegates() -> None:
     cmap = build_coordinate_map("-A-C", frozenset("-"))
     assert cmap.source_position(2) == 1

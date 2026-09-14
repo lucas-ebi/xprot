@@ -83,3 +83,8 @@ def test_load_tree_infers_format(tmp_path: Path) -> None:
     bad.write_text("((a,b),(c,d));", encoding="utf-8")
     with pytest.raises(TreeError):
         load_tree(bad)
+
+
+def test_load_tree_missing_file_is_a_tree_error(tmp_path: Path) -> None:
+    with pytest.raises(TreeError):
+        load_tree(tmp_path / "missing.nwk")

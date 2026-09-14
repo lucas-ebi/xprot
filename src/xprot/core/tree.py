@@ -38,9 +38,12 @@ def load_tree(
     if resolved_fmt is None:
         msg = f"cannot infer tree format from {path.name!r}; pass fmt="
         raise TreeError(msg)
-    return parse_tree(
-        path.read_text(encoding="utf-8"), resolved_fmt, rooting=rooting, outgroup=outgroup
-    )
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        msg = f"could not read {path}: {exc}"
+        raise TreeError(msg) from exc
+    return parse_tree(text, resolved_fmt, rooting=rooting, outgroup=outgroup)
 
 
 def parse_tree(

@@ -60,8 +60,13 @@ def load_alignment(
     if resolved_fmt is None:
         msg = f"cannot infer alignment format from {path.name!r}; pass fmt="
         raise AlignmentError(msg)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        msg = f"could not read {path}: {exc}"
+        raise AlignmentError(msg) from exc
     return parse_alignment(
-        path.read_text(encoding="utf-8"),
+        text,
         resolved_fmt,
         alphabet=alphabet,
         gap_symbols=gap_symbols,

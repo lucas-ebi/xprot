@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from xprot.core.errors import AlignmentError
 from xprot.core.models import Alignment, SequenceWeight
 
 __all__ = ["calculate_henikoff_weights"]
@@ -19,7 +20,7 @@ def calculate_henikoff_weights(alignment: Alignment) -> tuple[SequenceWeight, ..
     length = alignment.length
     if n_rows == 0 or length == 0:
         msg = "alignment has no residues to weight"
-        raise ValueError(msg)
+        raise AlignmentError(msg)
 
     matrix = np.array([list(row.aligned) for row in alignment.rows])  # (n_rows, length), '<U1'
     contributions = np.zeros((n_rows, length), dtype=np.float64)

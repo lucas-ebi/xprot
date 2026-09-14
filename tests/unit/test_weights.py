@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from xprot.core.alignment import parse_alignment
+from xprot.core.errors import AlignmentError
+from xprot.core.models import Alignment
 from xprot.core.weights import calculate_henikoff_weights
 
 
@@ -37,6 +39,11 @@ def test_row_order_invariant() -> None:
     forward = _weights(">s1\nAAC\n>s2\nAAG\n>s3\nATG\n")
     reordered = _weights(">s3\nATG\n>s1\nAAC\n>s2\nAAG\n")
     assert forward == pytest.approx(reordered)
+
+
+def test_empty_alignment_is_rejected() -> None:
+    with pytest.raises(AlignmentError):
+        calculate_henikoff_weights(Alignment(rows=(), alphabet="ACDEFGHIKLMNPQRSTVWY"))
 
 
 def test_redundant_sequences_are_downweighted() -> None:
