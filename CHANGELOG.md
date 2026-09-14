@@ -25,8 +25,11 @@
   - `design.generate_transformation` (literal and expanded modes) / `compare_with_fixture`.
   - `classes.load_class_table`.
 - `class_tables/taylor-1986.yaml` — amino-acid physicochemical classes, after Taylor (1986).
+- `xprot.app.run_design` — chains the pipeline (load → id-map → partition → weights → profiles →
+  typicality → transformation) behind one call; `class_table` accepts a mapping or a path.
+  Raises `IdentifierError` if the alignment and tree do not map one-to-one.
 
 ### Not yet done
 
-- `xprot.app` orchestration (`run_design`), output rendering, the `x-prot` CLI, and a contract
-  test against an external reference alignment/tree.
+- Output rendering, the `x-prot` CLI, and a contract test against an external reference
+  alignment/tree.

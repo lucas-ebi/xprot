@@ -15,8 +15,9 @@ the class. Every choice is a plain function parameter with a default; runs are d
 
 **Status: early.** The analysis pipeline is implemented as an importable library
 (`xprot.core`: alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and
-typicality, transformation-event generation, fixture comparison). Not yet built: the orchestration
-layer, output rendering, the `x-prot` command-line tool, and a browser UI.
+typicality, transformation-event generation, fixture comparison), plus `xprot.app.run_design`,
+which chains the whole pipeline behind one call. Not yet built: output rendering, the `x-prot`
+command-line tool, and a browser UI.
 
 ## Install
 
