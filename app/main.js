@@ -47,7 +47,7 @@ try {
   worker = new Worker('worker.js');
 } catch (_) {
   setStatus(
-    'Cannot start worker — serve docs/ with a local HTTP server (e.g. python -m http.server).',
+    'Cannot start worker — serve app/ with a local HTTP server (e.g. python -m http.server).',
     'error'
   );
 }
