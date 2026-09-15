@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="app-version" content="__APP_VERSION__">
+  <meta name="theme-color" content="#0a5032">
   <title>X-Prot</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -180,9 +185,16 @@
 
   <!-- ── Workspace ─────────────────────────────────────────────────── -->
   <div class="workspace">
-    <div id="run-banner" class="run-banner" hidden>
+    <div id="update-banner" class="notice-banner info" hidden>
+      <span id="update-banner-text">A new version is available.</span>
+      <div class="notice-banner-actions">
+        <button type="button" id="update-banner-reload" class="notice-banner-reload">Reload</button>
+        <button type="button" id="update-banner-close" class="notice-banner-close" aria-label="Dismiss">×</button>
+      </div>
+    </div>
+    <div id="run-banner" class="notice-banner success" hidden>
       <span id="run-banner-text"></span>
-      <button type="button" id="run-banner-close" aria-label="Dismiss">×</button>
+      <button type="button" id="run-banner-close" class="notice-banner-close" aria-label="Dismiss">×</button>
     </div>
     <div class="tab-bar" role="tablist">
       <button class="tab-btn active" data-tab="tree" onclick="switchTab(this)">Tree</button>
@@ -264,7 +276,7 @@
 </div><!-- /workbench -->
 
 <footer>
-  X-Prot v0.1.0 &nbsp;·&nbsp;
+  X-Prot <span id="app-version"></span> &nbsp;·&nbsp;
   <a href="https://github.com/lucas-ebi/xprot#citation" target="_blank" rel="noopener">How to cite</a>
   &nbsp;·&nbsp; GPL-3.0
 </footer>

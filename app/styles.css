@@ -249,23 +249,30 @@ header nav a:hover { color: #fff; }
   overflow: hidden; background: var(--white);
 }
 
-/* ── Run-completion banner ───────────────────────────────────────── */
-.run-banner {
+/* ── Notice banners (run-completion, update-available) ───────────── */
+.notice-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   flex-shrink: 0;
-  background: #e8f5ee; border-bottom: 1px solid var(--green);
-  color: var(--green-dark);
   padding: 0.45rem 1rem;
   font-size: 0.8125rem; font-weight: 600;
   animation: banner-in 0.25s ease;
 }
-.run-banner[hidden] { display: none; }
+.notice-banner[hidden] { display: none; }
+.notice-banner.success { background: #e8f5ee; border-bottom: 1px solid var(--green); color: var(--green-dark); }
+.notice-banner.info { background: var(--blue-light); border-bottom: 1px solid var(--blue); color: var(--blue-dark); }
 @keyframes banner-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-#run-banner-close {
-  background: none; border: none; cursor: pointer;
-  color: var(--green-dark); font-size: 1.125rem; line-height: 1; padding: 0; flex-shrink: 0;
+.notice-banner-actions { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.notice-banner-reload {
+  font-family: inherit; font-size: 0.8125rem; font-weight: 700;
+  background: var(--blue); color: #fff; border: none; border-radius: 3px;
+  padding: 0.25rem 0.7rem; cursor: pointer;
 }
-#run-banner-close:hover { opacity: 0.7; }
+.notice-banner-reload:hover { background: var(--blue-dark); }
+.notice-banner-close {
+  background: none; border: none; cursor: pointer;
+  color: inherit; font-size: 1.125rem; line-height: 1; padding: 0; flex-shrink: 0;
+}
+.notice-banner-close:hover { opacity: 0.7; }
 
 /* ── Tab bar ─────────────────────────────────────────────────────── */
 .tab-bar {

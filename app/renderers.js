@@ -46,7 +46,7 @@ function layoutTree(root) {
 }
 
 // Leaf names under `n`, and the sorted-key form used to identify a node from its
-// descendant-tip set (shared with app.js, which resolves clicks back to a node this way).
+// descendant-tip set (shared with main.js, which resolves clicks back to a node this way).
 function leafNames(n) {
   return n.children.length ? n.children.flatMap(leafNames) : [n.name];
 }

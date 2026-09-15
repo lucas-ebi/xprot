@@ -1,0 +1,15 @@
+{
+  "name": "X-Prot",
+  "short_name": "X-Prot",
+  "description": "Evolution-based protein engineering: propose the substitutions, insertions, and deletions that transfer a donor clade's conserved residues onto a recipient representative.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#0a5032",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

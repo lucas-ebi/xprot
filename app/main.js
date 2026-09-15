@@ -589,3 +589,43 @@ function closePreview() {
   document.getElementById('preview-content').innerHTML = '';
   if (activePreviewBtn) { activePreviewBtn.classList.remove('active'); activePreviewBtn = null; }
 }
+
+// ── PWA: version display, service worker registration, update banner ───────
+(function displayVersion() {
+  const meta = document.querySelector('meta[name="app-version"]');
+  const raw = meta ? meta.content : '';
+  document.getElementById('app-version').textContent =
+    raw && raw !== '__APP_VERSION__' ? raw : 'dev';
+})();
+
+let swRegistration = null;
+
+function showUpdateBanner() {
+  document.getElementById('update-banner').hidden = false;
+}
+document.getElementById('update-banner-reload').addEventListener('click', () => {
+  swRegistration?.waiting?.postMessage({type: 'SKIP_WAITING'});
+});
+document.getElementById('update-banner-close').addEventListener('click', () => {
+  document.getElementById('update-banner').hidden = true;
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    swRegistration = reg;
+    // A waiting worker already sitting there (e.g. installed while this tab was closed).
+    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+    reg.addEventListener('updatefound', () => {
+      const installing = reg.installing;
+      if (!installing) return;
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateBanner();
+        }
+      });
+    });
+  }).catch(err => console.error('Service worker registration failed:', err));
+
+  // Fires once the SKIP_WAITING'd worker actually takes control -- pick up its assets.
+  navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+}

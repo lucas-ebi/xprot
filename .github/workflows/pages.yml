@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths: ['app/**']
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -24,8 +25,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Inject version
+        run: |
+          version="$(git describe --tags --always)"
+          echo "Deploying version: $version"
+          sed -i "s/__APP_VERSION__/$version/g" app/index.html app/sw.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
