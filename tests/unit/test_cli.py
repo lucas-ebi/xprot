@@ -59,6 +59,69 @@ def test_design_writes_all_outputs(tmp_path: Path, capsys: pytest.CaptureFixture
     assert "r1 -> d1" in out
 
 
+def test_design_threshold_flag_is_forwarded(tmp_path: Path) -> None:
+    # threshold=0.5 doesn't change this fixture's outcome, just confirms the flag parses and
+    # reaches run_design without error.
+    aln_path, tree_path = _write(tmp_path)
+    out_dir = tmp_path / "out"
+
+    code = main(
+        [
+            "design",
+            "--alignment",
+            str(aln_path),
+            "--tree",
+            str(tree_path),
+            "--node-tips",
+            "r1,a2,d1,b2",
+            "--recipient",
+            "r1",
+            "--donor",
+            "d1",
+            "--threshold",
+            "0.5",
+            "--out",
+            str(out_dir),
+        ]
+    )
+
+    assert code == 0
+    summary = json.loads((out_dir / "summary.json").read_text())
+    assert summary["substitutions"] == 1
+    assert summary["insertions"] == 1
+
+
+def test_design_deletions_flag_emits_a_deletion(tmp_path: Path) -> None:
+    # Donor clade (d1, b2) is gapped at column 2; recipient clade (r1, a2) is not.
+    aln_path, tree_path = _write(
+        tmp_path, fasta=">r1\nMK\n>a2\nMK\n>d1\nM-\n>b2\nM-\n", newick="((r1,a2),(d1,b2));"
+    )
+    out_dir = tmp_path / "out"
+
+    code = main(
+        [
+            "design",
+            "--alignment",
+            str(aln_path),
+            "--tree",
+            str(tree_path),
+            "--node-tips",
+            "r1,a2,d1,b2",
+            "--recipient",
+            "r1",
+            "--donor",
+            "d1",
+            "--deletions",
+            "--out",
+            str(out_dir),
+        ]
+    )
+
+    assert code == 0
+    summary = json.loads((out_dir / "summary.json").read_text())
+    assert summary["deletions"] == 1
+
+
 def test_design_dry_run_writes_nothing(tmp_path: Path) -> None:
     aln_path, tree_path = _write(tmp_path)
 

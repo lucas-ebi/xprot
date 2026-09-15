@@ -73,7 +73,7 @@ header nav a:hover { color: #fff; }
   display: flex; align-items: baseline; gap: 0.35rem;
 }
 .hint { font-weight: 400; font-size: 0.6875rem; color: var(--muted); }
-.field input[type="text"], .field input[type="file"], .field select, .field textarea {
+.field input[type="text"], .field input[type="number"], .field input[type="file"], .field select, .field textarea {
   padding: 0.3rem 0.45rem;
   border: 1px solid var(--border);
   font-size: 0.8125rem;

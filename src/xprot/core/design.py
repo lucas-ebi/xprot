@@ -70,7 +70,6 @@ def generate_transformation(
                 profiles,
                 mode,
                 class_table or {},
-                gap,
             )
 
         if target is None or target == source_state:
@@ -181,7 +180,6 @@ def _pick_target(
     profiles: ProfileSet,
     mode: DesignMode,
     class_table: Mapping[str, str],
-    gap: str,
 ) -> tuple[str | None, str, float]:
     donor_profile = profiles.residue_profile(column, donor_label)
     donor_freqs = donor_profile.frequencies if donor_profile else {}
@@ -189,7 +187,7 @@ def _pick_target(
     if mode is DesignMode.LITERAL:
         donor_typical = typical_states.for_column(column, donor_label)
         recipient_typical = typical_states.for_column(column, recipient_label)
-        candidates = [r for r in donor_typical - recipient_typical if r != gap]
+        candidates = list(donor_typical - recipient_typical)
         if not candidates:
             return None, "", 0.0
         best = _rank_by_frequency(candidates, donor_freqs)

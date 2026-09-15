@@ -22,6 +22,7 @@ from xprot.core.errors import (
     TreeError,
 )
 from xprot.core.models import NodeSelector
+from xprot.core.profile import DEFAULT_THRESHOLD
 from xprot.render import (
     render_diagnostics_json,
     render_events_json,
@@ -56,6 +57,24 @@ def _build_parser() -> argparse.ArgumentParser:
     node.add_argument("--node-label", help="label of the internal node")
     design.add_argument("--recipient", required=True)
     design.add_argument("--donor", required=True)
+    design.add_argument(
+        "--threshold",
+        type=float,
+        default=DEFAULT_THRESHOLD,
+        help=(
+            "typicality cutoff, a state must exceed this weighted frequency "
+            f"(default {DEFAULT_THRESHOLD})"
+        ),
+    )
+    design.add_argument(
+        "--deletions",
+        action="store_true",
+        help=(
+            "also propose deleting a recipient residue at columns where the donor subfamily is "
+            "typically gapped, instead of skipping those columns (also allows gap itself to "
+            "count as typical, which is otherwise off by default)"
+        ),
+    )
     design.add_argument("--out", type=Path, help="directory to write outputs into")
     design.add_argument("--dry-run", action="store_true", help="run without writing any files")
     return parser
@@ -70,7 +89,14 @@ def _design(args: argparse.Namespace) -> int:
 
     try:
         result = run_design(
-            args.alignment, args.tree, node, recipient=args.recipient, donor=args.donor
+            args.alignment,
+            args.tree,
+            node,
+            recipient=args.recipient,
+            donor=args.donor,
+            threshold=args.threshold,
+            deletions=args.deletions,
+            typical_gap=args.deletions,
         )
     except (AlignmentError, ClassTableError) as exc:
         print(f"error: {exc}", file=sys.stderr)

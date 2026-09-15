@@ -6,6 +6,36 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.1.4] - 2026-09-15
+
+### Added
+
+- `app/`'s Run step gets an "Advanced settings" panel: the typicality cutoff (θ, default 0.9) as
+  a number input, and an "Allow deletions" checkbox — both wired through `worker.js` into
+  `run_design`'s existing `threshold` and `deletions` parameters. Placed in step 4 (Run), not
+  step 3 (Node & representatives): step 3 auto-collapses the instant node/donor/recipient are all
+  filled, so a setting nested inside it would already be hidden again before most people could
+  reach it.
+- `x-prot design` gets matching `--threshold` and `--deletions` flags, for the same reason: the
+  CLI is meant to be a full peer of the browser UI, not a subset.
+
+### Fixed
+
+- The `deletions` parameter of `xprot.app.run_design` did nothing when set — undetectable until
+  now since neither the CLI nor the browser UI exposed it yet. Root cause:
+  `xprot.core.design._pick_target` unconditionally filtered the gap out of its candidate list
+  (`if r != gap`) before ever ranking a target, so a donor-typically-gapped column could never be
+  selected as a deletion candidate in the first place — the `elif target == gap` branch a few
+  lines below, and the `deletions` parameter gating it, were dead code. Found while wiring "Allow
+  deletions" into the browser UI: the checkbox had no observable effect even with a test case
+  engineered so the donor clade was clearly gapped where the recipient wasn't. Fixed by dropping
+  the filter; added a regression test (`test_literal_deletion_when_donor_is_typically_gapped`)
+  exercising both the skipped-without-`deletions` and emitted-with-`deletions` paths, plus CLI
+  tests for both new flags. Also requires `typical_gap=True` (a separate, pre-existing parameter
+  of `determine_typical_states`, off by default) — without it, gap can never be marked "typical"
+  for a subfamily regardless of this fix, so both the browser's "Allow deletions" checkbox and the
+  CLI's `--deletions` flag set `typical_gap` together rather than exposing it separately.
+
 ## [0.1.3] - 2026-09-15
 
 ### Fixed

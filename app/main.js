@@ -490,6 +490,7 @@ async function runDesign() {
 
   const byTips = document.getElementById('node-mode-tips').checked;
   const treeText = document.getElementById('tree-text').value;
+  const thresholdVal = parseFloat(document.getElementById('threshold').value);
   const request = {
     alignmentText: document.getElementById('aln-text').value,
     alignmentFormat: document.getElementById('aln-format').value,
@@ -499,6 +500,8 @@ async function runDesign() {
     nodeLabel: byTips ? '' : document.getElementById('node-label').value,
     recipient: document.getElementById('recipient').value,
     donor: document.getElementById('donor').value,
+    threshold: Number.isFinite(thresholdVal) ? thresholdVal : 0.9,
+    deletions: document.getElementById('deletions').checked,
   };
 
   try {

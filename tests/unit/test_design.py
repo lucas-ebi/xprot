@@ -31,11 +31,11 @@ def _setup(
     return aln, weights, part
 
 
-def _run(fasta: str, newick: str, **kw: object) -> TransformedResult:
+def _run(fasta: str, newick: str, *, typical_gap: bool = False, **kw: object) -> TransformedResult:
     aln, weights, part = _setup(fasta, newick)
     table = kw.get("class_table")
     profiles = calculate_profiles(aln, part, weights, class_table=table)  # type: ignore[arg-type]
-    typical = determine_typical_states(profiles, threshold=0.9)
+    typical = determine_typical_states(profiles, threshold=0.9, typical_gap=typical_gap)
     return generate_transformation(aln, part, profiles, typical, **kw)  # type: ignore[arg-type]
 
 
@@ -52,6 +52,29 @@ def test_literal_substitution_and_insertion() -> None:
     assert result.events[0].source_position == 2
     assert result.events[1].insertion_anchor == 2
     assert (result.substitutions, result.insertions, result.deletions) == (1, 1, 0)
+
+
+def test_literal_deletion_when_donor_is_typically_gapped() -> None:
+    # Donor clade (d1, b2) is gapped at column 2; recipient clade (r1, a2) is not.
+    fasta = ">r1\nMK\n>a2\nMK\n>d1\nM-\n>b2\nM-\n"
+    newick = "((r1,a2),(d1,b2));"
+
+    skipped = _run(fasta, newick, recipient="r1", donor="d1", typical_gap=True, deletions=False)
+    assert skipped.events == ()
+    assert skipped.transformed_sequence == "MK"
+    assert (skipped.substitutions, skipped.insertions, skipped.deletions) == (0, 0, 0)
+    assert any(d.code == "DESIGN_DELETION_SKIPPED" for d in skipped.diagnostics)
+
+    result = _run(fasta, newick, recipient="r1", donor="d1", typical_gap=True, deletions=True)
+    assert result.transformed_sequence == "M"
+    tokens = [
+        (e.alignment_column, e.event_type.value, e.source_state, e.transformed_state)
+        for e in result.events
+    ]
+    assert tokens == [(2, "deletion", "K", "-")]
+    assert result.events[0].source_position == 2
+    assert result.events[0].transformed_position is None
+    assert (result.substitutions, result.insertions, result.deletions) == (0, 0, 1)
 
 
 def test_expanded_mode_uses_class_and_picks_a_member() -> None:

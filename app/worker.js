@@ -114,6 +114,12 @@ from xprot.render import (
 _result = run_design(
     ${JSON.stringify(alnPath)}, ${JSON.stringify(treePath)}, ${nodeArg},
     recipient=${JSON.stringify(r.recipient)}, donor=${JSON.stringify(r.donor)},
+    threshold=${JSON.stringify(r.threshold)},
+    deletions=${r.deletions ? 'True' : 'False'},
+    # A gap can only ever become a deletion target if it's allowed to count as "typical" for the
+    # donor subfamily in the first place (typical_gap, off by default) -- the "Allow deletions"
+    # checkbox implies both, so it does something observable rather than a no-op.
+    typical_gap=${r.deletions ? 'True' : 'False'},
 )
 Path("/output/transformed.fasta").write_bytes(render_transformed_fasta(_result.transformed))
 Path("/output/events.tsv").write_bytes(render_events_tsv(_result.transformed.events))
