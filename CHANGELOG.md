@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Not yet done
+
+- A contract test against an external reference alignment/tree.
+
+## [0.1.1] - 2026-09-15
+
 ### Added
 
 - `xprot.render.render_pairwise_json` — recipient vs. transformed alignment, as JSON alongside
@@ -24,10 +30,6 @@
   first installed, surviving even a hard reload.
 - README: a LaTeX formula in the Transformation section was hard-wrapped across two source lines,
   which broke inline-math rendering in some previewers; it's back on one line.
-
-### Not yet done
-
-- A contract test against an external reference alignment/tree.
 
 ## [0.1.0] - 2026-09-15
 
