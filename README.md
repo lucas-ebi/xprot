@@ -110,7 +110,16 @@ individual residues, with $f_{S,j}(\text{class}) = \sum_{r\, \in\, \text{class}}
 
 **Transformation.** At each alignment column, X-Prot proposes changing the recipient
 representative's state to a donor state that is typical for the donor subfamily but *not* typical
-for the recipient subfamily — a state in $\text{typical}_{donor,j} \setminus \text{typical}_{recipient,j}$ — ranking multiple candidates by donor frequency. In expanded mode the same set-difference test runs over classes first: a class typical for the donor but not the recipient, and not already carried by the recipient's current residue, is expanded back into its highest-frequency donor residue.
+for the recipient subfamily — a state in
+
+```math
+\text{typical}_{donor,j} \setminus \text{typical}_{recipient,j}
+```
+
+— ranking multiple candidates by donor frequency. In expanded mode the same set-difference test
+runs over classes first: a class typical for the donor but not the recipient, and not already
+carried by the recipient's current residue, is expanded back into its highest-frequency donor
+residue.
 
 ## References
 
