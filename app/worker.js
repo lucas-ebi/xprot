@@ -11,6 +11,7 @@
 //   run      → done     {filenames}
 //   getText  → text     {filename, text}
 //   getBytes → bytes    {filename, buffer}   (buffer is Transferable)
+//   getZip   → bytes    {filename: 'xprot-results.zip', buffer}  (all /output files zipped)
 //   any      → error    {message}
 
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js');
@@ -141,6 +142,19 @@ Path("/output/diagnostics.json").write_bytes(render_diagnostics_json(
       const raw = pyodide.FS.readFile('/output/' + args.filename);
       const buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
       postMessage({type: 'bytes', id, filename: args.filename, buffer: buf}, [buf]);
+
+    } else if (type === 'getZip') {
+      await pyodide.runPythonAsync(`
+import zipfile
+from pathlib import Path
+
+with zipfile.ZipFile("/output.zip", "w", zipfile.ZIP_DEFLATED) as zf:
+    for p in sorted(Path("/output").iterdir()):
+        zf.write(p, arcname=p.name)
+`);
+      const raw = pyodide.FS.readFile('/output.zip');
+      const buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
+      postMessage({type: 'bytes', id, filename: 'xprot-results.zip', buffer: buf}, [buf]);
     }
 
   } catch (err) {

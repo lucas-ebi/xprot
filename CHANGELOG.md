@@ -6,6 +6,15 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.2.2] - 2026-09-15
+
+### Added
+
+- `app/`'s Output files table gets a "download all (.zip)" button, zipping every generated file
+  (`transformed.fasta`, `events.tsv`/`.json`, `pairwise.txt`/`.json`, `summary.json`,
+  `diagnostics.json`) into one `xprot-results.zip` via a new `getZip` worker message and Python's
+  `zipfile`, instead of downloading each file one at a time.
+
 ## [0.2.1] - 2026-09-15
 
 ### Added

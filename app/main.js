@@ -414,13 +414,30 @@ async function getFileText(filename) {
   return text;
 }
 
-async function downloadFile(filename) {
-  const {buffer} = await workerRequest({type: 'getBytes', filename});
-  const url = URL.createObjectURL(new Blob([buffer], {type: 'text/plain'}));
+function saveBlob(buffer, filename, type) {
+  const url = URL.createObjectURL(new Blob([buffer], {type}));
   const a = document.createElement('a');
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+async function downloadFile(filename) {
+  const {buffer} = await workerRequest({type: 'getBytes', filename});
+  saveBlob(buffer, filename, 'text/plain');
+}
+
+async function downloadAllZip(btn) {
+  btn.disabled = true;
+  try {
+    const {filename, buffer} = await workerRequest({type: 'getZip'});
+    saveBlob(buffer, filename, 'application/zip');
+  } catch (err) {
+    setStatus('Error building zip: ' + err.message, 'error');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── Run a design ─────────────────────────────────────────────────────────

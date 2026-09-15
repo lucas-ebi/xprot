@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xprot"
-version = "0.2.1"
+version = "0.2.2"
 description = "Local, deterministic subfamily-conservation analysis for protein families."
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
