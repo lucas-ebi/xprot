@@ -553,7 +553,7 @@ async function runDesign() {
 
     const resultText = `${summary.substitutions} substitutions, ${summary.insertions} insertions, ${summary.deletions} deletions`;
     setStatus(resultText, 'ready');
-    showRunBanner(`✓ Design complete — ${resultText}`);
+    showRunBanner(`Design complete — ${resultText}`);
 
   } catch (err) {
     setStatus('Error: ' + err.message, 'error');
