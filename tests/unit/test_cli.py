@@ -48,6 +48,7 @@ def test_design_writes_all_outputs(tmp_path: Path, capsys: pytest.CaptureFixture
         "events.tsv",
         "events.json",
         "pairwise.txt",
+        "pairwise.json",
         "summary.json",
         "diagnostics.json",
     }

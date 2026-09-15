@@ -9,6 +9,7 @@ from xprot.render import (
     render_events_json,
     render_events_tsv,
     render_pairwise,
+    render_pairwise_json,
     render_summary_json,
     render_transformed_fasta,
 )
@@ -113,6 +114,16 @@ def test_render_pairwise_marks_changes() -> None:
     expected_marker = "".join("*" if a != b else " " for a, b in zip("MH-T", "MKGT", strict=True))
     assert marker_line.endswith(expected_marker)
     assert marker_line[: len(marker_line) - len(expected_marker)] == " " * 17
+
+
+def test_render_pairwise_json() -> None:
+    payload = json.loads(render_pairwise_json(RESULT))
+    assert payload == {
+        "recipient_id": "r1",
+        "donor_id": "d1",
+        "aligned_source": "MH-T",
+        "aligned_transformed": "MKGT",
+    }
 
 
 def test_render_summary_json() -> None:

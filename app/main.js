@@ -536,12 +536,13 @@ async function runDesign() {
     document.getElementById('empty-pairwise').style.display = 'none';
     const pairwisePanel = document.getElementById('panel-pairwise');
     pairwisePanel.classList.add('visible');
-    renderText(await getFileText('pairwise.txt'), pairwisePanel);
+    const eventsText = await getFileText('events.json');
+    renderPairwise(await getFileText('pairwise.json'), eventsText, pairwisePanel);
 
     document.getElementById('empty-events').style.display = 'none';
     const eventsPanel = document.getElementById('panel-events');
     eventsPanel.classList.add('visible');
-    renderEvents(await getFileText('events.json'), eventsPanel, 'No changes proposed: the clades already agree at every position.');
+    renderEvents(eventsText, eventsPanel, 'No changes proposed: the clades already agree at every position.');
 
     document.getElementById('empty-diagnostics').style.display = 'none';
     const diagPanel = document.getElementById('panel-diagnostics');
@@ -610,22 +611,39 @@ document.getElementById('update-banner-close').addEventListener('click', () => {
   document.getElementById('update-banner').hidden = true;
 });
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(reg => {
-    swRegistration = reg;
-    // A waiting worker already sitting there (e.g. installed while this tab was closed).
-    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
-    reg.addEventListener('updatefound', () => {
-      const installing = reg.installing;
-      if (!installing) return;
-      installing.addEventListener('statechange', () => {
-        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateBanner();
-        }
-      });
-    });
-  }).catch(err => console.error('Service worker registration failed:', err));
+// Keep in sync with worker.js's own local-host list (used there to fetch xprot's source from
+// the local project tree instead of GitHub).
+const IS_LOCAL_DEV = [
+  'localhost', '127.0.0.1', '::1', '::',
+].includes(location.hostname);
 
-  // Fires once the SKIP_WAITING'd worker actually takes control -- pick up its assets.
-  navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+if ('serviceWorker' in navigator) {
+  if (IS_LOCAL_DEV) {
+    // The shell cache's key never rolls over locally (__APP_VERSION__ stays a literal
+    // placeholder outside of a real deploy), so a service worker installed during an earlier
+    // local session would otherwise serve index.html/main.js/renderers.js/styles.css/worker.js
+    // from that frozen precache forever -- surviving even a hard reload, since the browser
+    // never gets to make the request at all. Local dev must always reflect disk, so never
+    // register here, and clean up anything left over from before this fix existed.
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  } else {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      swRegistration = reg;
+      // A waiting worker already sitting there (e.g. installed while this tab was closed).
+      if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+      reg.addEventListener('updatefound', () => {
+        const installing = reg.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', () => {
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBanner();
+          }
+        });
+      });
+    }).catch(err => console.error('Service worker registration failed:', err));
+
+    // Fires once the SKIP_WAITING'd worker actually takes control -- pick up its assets.
+    navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+  }
 }

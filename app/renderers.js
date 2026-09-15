@@ -368,6 +368,63 @@ function renderEvents(jsonText, container, emptyMessage) {
   container.appendChild(list);
 }
 
+const PAIRWISE_WRAP_WIDTH = 60;
+
+// Tooltip text for a colored residue — the type label plus the same donor/recipient frequency
+// and rule-class info renderEvents shows in `.event-detail`, since there's no adjacent badge here.
+function eventDetail(e) {
+  let text = `${EVENT_TYPE_LABEL[e.event_type] || e.event_type} · donor ${Number(e.donor_frequency).toFixed(2)} · recipient ${Number(e.recipient_frequency).toFixed(2)}`;
+  if (e.rule && e.rule !== 'literal') text += ` · class "${e.rule}"`;
+  return text;
+}
+
+// Recipient vs. transformed, in alignment coordinates, as colored residues instead of the flat
+// `*` marker row in pairwise.txt (still available as a download) — reuses the exact event-type
+// color language already established by renderEvents' `.event-badge` classes.
+function renderPairwise(pairwiseJson, eventsJson, container) {
+  const {recipient_id, donor_id, aligned_source, aligned_transformed} = JSON.parse(pairwiseJson);
+  const events = JSON.parse(eventsJson);
+  const byColumn = new Map(events.map(e => [e.alignment_column, e]));
+
+  const header = document.createElement('div');
+  header.className = 'pairwise-header';
+  header.textContent = `recipient: ${recipient_id}  donor: ${donor_id}`;
+  container.appendChild(header);
+
+  function buildRow(label, sequence, start) {
+    const row = document.createElement('div');
+    row.className = 'pairwise-row';
+
+    const rowLabel = document.createElement('span');
+    rowLabel.className = 'pairwise-row-label';
+    rowLabel.textContent = `${label} ${start + 1}`;
+    row.appendChild(rowLabel);
+
+    const residues = document.createElement('span');
+    residues.className = 'pairwise-residues';
+    for (let i = 0; i < sequence.length; i++) {
+      // alignment_column is 1-indexed (see src/xprot/core/design.py); sequence[i] is 0-indexed.
+      const event = byColumn.get(start + i + 1);
+      const span = document.createElement('span');
+      span.className = 'pairwise-residue' + (event ? ' ' + event.event_type : '');
+      span.textContent = sequence[i];
+      if (event) span.title = eventDetail(event);
+      residues.appendChild(span);
+    }
+    row.appendChild(residues);
+    return row;
+  }
+
+  for (let start = 0; start < aligned_source.length; start += PAIRWISE_WRAP_WIDTH) {
+    const end = Math.min(start + PAIRWISE_WRAP_WIDTH, aligned_source.length);
+    const block = document.createElement('div');
+    block.className = 'pairwise-block';
+    block.appendChild(buildRow('before', aligned_source.slice(start, end), start));
+    block.appendChild(buildRow('after', aligned_transformed.slice(start, end), start));
+    container.appendChild(block);
+  }
+}
+
 // Renders a JSON array of flat objects (events, diagnostics) as a table, columns
 // taken from the union of keys across all rows so an absent field just renders empty.
 function renderObjectTable(jsonText, container, emptyMessage) {

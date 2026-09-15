@@ -3,9 +3,16 @@
 // global scope and never touches Python at all.
 //
 // __APP_VERSION__ is substituted by the GitHub Actions Pages workflow at deploy time (see
-// .github/workflows/pages.yml); a local checkout keeps the literal placeholder, which still
-// works fine as a cache-key string, it just means the shell cache won't roll over between local
-// edits -- use DevTools > Application > Service Workers > "Update on reload" while developing.
+// .github/workflows/pages.yml); a local checkout keeps the literal placeholder, so the shell
+// cache's key never rolls over locally. Since main.js (below) never registers this worker on a
+// local-dev host in the first place, the only way it can be running there at all is a
+// registration left over from before that guard existed -- self-destruct in that case instead of
+// silently freezing index.html/main.js/renderers.js/styles.css/worker.js at whatever they were
+// when it first installed. Keep in sync with main.js's own IS_LOCAL_DEV list.
+const IS_LOCAL_DEV = [
+  'localhost', '127.0.0.1', '::1', '::',
+].includes(self.location.hostname);
+
 const APP_VERSION = '__APP_VERSION__';
 const SHELL_CACHE = `xprot-shell-${APP_VERSION}`;
 const RUNTIME_CACHE = 'xprot-runtime-v1';
@@ -34,10 +41,24 @@ const RUNTIME_HOSTS = [
 ];
 
 self.addEventListener('install', event => {
+  if (IS_LOCAL_DEV) {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
   event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll(SHELL_FILES)));
 });
 
 self.addEventListener('activate', event => {
+  if (IS_LOCAL_DEV) {
+    event.waitUntil(
+      caches.keys()
+        .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+        .then(() => self.registration.unregister())
+        .then(() => self.clients.matchAll())
+        .then(clients => clients.forEach(client => client.navigate(client.url)))
+    );
+    return;
+  }
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(

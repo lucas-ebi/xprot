@@ -14,6 +14,7 @@ __all__ = [
     "render_events_json",
     "render_events_tsv",
     "render_pairwise",
+    "render_pairwise_json",
     "render_summary_json",
     "render_transformed_fasta",
 ]
@@ -96,6 +97,17 @@ def render_pairwise(result: TransformedResult, *, width: int = DEFAULT_WRAP_WIDT
         blocks.append(f"{'after':<10}{start + 1:>6} {after}")
         blocks.append("")
     return ("\n".join(blocks)).rstrip("\n").encode("utf-8") + b"\n"
+
+
+def render_pairwise_json(result: TransformedResult) -> bytes:
+    """Recipient vs. transformed, in alignment coordinates, as JSON for the colored diff view."""
+    payload = {
+        "recipient_id": result.recipient_id,
+        "donor_id": result.donor_id,
+        "aligned_source": result.aligned_source,
+        "aligned_transformed": result.aligned_transformed,
+    }
+    return _dump(payload)
 
 
 def render_summary_json(

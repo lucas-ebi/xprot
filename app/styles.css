@@ -468,6 +468,20 @@ header nav a:hover { color: #fff; }
 .event-badge.deletion { color: var(--amber); }
 .event-detail { color: var(--muted); font-size: 0.75rem; margin-left: auto; }
 
+/* ── Pairwise diff ───────────────────────────────────────────────── */
+.pairwise-header { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+.pairwise-block { margin-bottom: 0.75rem; }
+.pairwise-row {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.8125rem; line-height: 1.5;
+}
+.pairwise-row-label { color: var(--muted); width: 5.5rem; flex-shrink: 0; text-align: right; }
+.pairwise-residues { white-space: pre; word-break: break-all; }
+.pairwise-residue.substitution { color: var(--blue); font-weight: 700; }
+.pairwise-residue.insertion { color: var(--green-dark); font-weight: 700; }
+.pairwise-residue.deletion { color: var(--amber); font-weight: 700; }
+
 /* ── Files tab ───────────────────────────────────────────────────── */
 .files-content { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; }
 .output-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }

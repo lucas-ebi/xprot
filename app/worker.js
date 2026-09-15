@@ -55,7 +55,10 @@ async function init() {
     try { pyodide.FS.mkdir('/' + dir); } catch (_) {}
   }
   await Promise.all(XPROT_FILES.map(async file => {
-    const res = await fetch(BASE + file);
+    // no-store: the local-dev BASE promises edits are reflected immediately, but with no
+    // Cache-Control header from `python -m http.server`, Chrome's heuristic freshness would
+    // otherwise keep serving whatever it first fetched, across reloads and even new tabs.
+    const res = await fetch(BASE + file, {cache: 'no-store'});
     if (!res.ok) throw new Error(`Failed to fetch xprot/${file} (${res.status})`);
     pyodide.FS.writeFile('/xprot/' + file, await res.text());
   }));
@@ -92,7 +95,7 @@ from xprot.core.models import NodeSelector
 from xprot.app import run_design
 from xprot.render import (
     render_events_tsv, render_events_json, render_transformed_fasta,
-    render_pairwise, render_summary_json, render_diagnostics_json,
+    render_pairwise, render_pairwise_json, render_summary_json, render_diagnostics_json,
 )
 
 _result = run_design(
@@ -103,6 +106,7 @@ Path("/output/transformed.fasta").write_bytes(render_transformed_fasta(_result.t
 Path("/output/events.tsv").write_bytes(render_events_tsv(_result.transformed.events))
 Path("/output/events.json").write_bytes(render_events_json(_result.transformed.events))
 Path("/output/pairwise.txt").write_bytes(render_pairwise(_result.transformed))
+Path("/output/pairwise.json").write_bytes(render_pairwise_json(_result.transformed))
 Path("/output/summary.json").write_bytes(render_summary_json(
     _result.transformed, _result.partition, is_bijective=_result.id_mapping.is_bijective
 ))

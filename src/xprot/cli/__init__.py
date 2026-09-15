@@ -27,6 +27,7 @@ from xprot.render import (
     render_events_json,
     render_events_tsv,
     render_pairwise,
+    render_pairwise_json,
     render_summary_json,
     render_transformed_fasta,
 )
@@ -93,6 +94,7 @@ def _write_outputs(out: Path, result: RunResult) -> None:
     (out / "events.tsv").write_bytes(render_events_tsv(result.transformed.events))
     (out / "events.json").write_bytes(render_events_json(result.transformed.events))
     (out / "pairwise.txt").write_bytes(render_pairwise(result.transformed))
+    (out / "pairwise.json").write_bytes(render_pairwise_json(result.transformed))
     (out / "summary.json").write_bytes(
         render_summary_json(
             result.transformed, result.partition, is_bijective=result.id_mapping.is_bijective
