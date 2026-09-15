@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `pages.yml` triggered on every push to `main` touching `app/**` *and* on every `v*` tag push,
+  sharing one `concurrency: group: pages` — tagging a release right after (or as part of) a normal
+  push queued two deploys back-to-back instead of one clean one. Confirmed live: releasing v0.2.0
+  produced two separate `github-pages` deployment records six minutes apart, and the footer kept
+  showing the untagged `git describe` fallback (`v0.1.4-1-g9d64c27`) long after the tag deploy had
+  actually succeeded, purely from GitHub's Pages CDN having cached the earlier branch-push deploy's
+  response. Deploys now trigger only on `v*` tag pushes (plus manual `workflow_dispatch`), so
+  `git describe --tags --always` always resolves to the clean tag with no fallback suffix, and each
+  release is exactly one deploy.
+
 ### Not yet done
 
 - A contract test against an external reference alignment/tree.
