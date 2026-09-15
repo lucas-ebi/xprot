@@ -11,11 +11,14 @@ per-position frequencies, and rule that produced each change. See
 Every choice — the conservation threshold, the weighting scheme, literal vs. expanded mode — is a
 plain function parameter with a default; runs are deterministic.
 
-**Status: early.** The analysis pipeline is implemented as an importable library
-(`xprot.core`: alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and
-typicality, transformation-event generation, fixture comparison), `xprot.app.run_design`, which
-chains the whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the
-`x-prot` command-line tool, and a static browser UI (`app/`) running the same package in-browser.
+**Status: v0.1.3, working.** The analysis pipeline is an importable library (`xprot.core`:
+alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and typicality,
+transformation-event generation, fixture comparison), `xprot.app.run_design`, which chains the
+whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the `x-prot`
+command-line tool, and a browser UI (`app/`) running the same package in-browser as an installable,
+offline-capable PWA. Gate is green (`ruff`, `ruff format`, `mypy --strict`, tests); the browser UI
+is deployed and verified working on GitHub Pages. Not yet done: a contract test against an external
+reference alignment/tree.
 
 ## Install
 
@@ -107,12 +110,7 @@ individual residues, with $f_{S,j}(\text{class}) = \sum_{r\, \in\, \text{class}}
 
 **Transformation.** At each alignment column, X-Prot proposes changing the recipient
 representative's state to a donor state that is typical for the donor subfamily but *not* typical
-for the recipient subfamily — a state in
-$\text{typical}_{donor,j} \setminus \text{typical}_{recipient,j}$ — ranking multiple candidates by
-donor frequency. In expanded mode the same set-difference test runs over classes first: a class
-typical for the donor but not the
-recipient, and not already carried by the recipient's current residue, is expanded back into its
-highest-frequency donor residue.
+for the recipient subfamily — a state in $\text{typical}_{donor,j} \setminus \text{typical}_{recipient,j}$ — ranking multiple candidates by donor frequency. In expanded mode the same set-difference test runs over classes first: a class typical for the donor but not the recipient, and not already carried by the recipient's current residue, is expanded back into its highest-frequency donor residue.
 
 ## References
 
