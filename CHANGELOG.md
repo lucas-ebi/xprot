@@ -6,6 +6,17 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.1.3] - 2026-09-15
+
+### Fixed
+
+- `v0.1.2`'s own fix didn't actually take effect: the deploy workflow's `sed` substitution is a
+  blind text replace, and `app/worker.js` compared the injected ref against the placeholder's own
+  literal text (`APP_REF === '__APP_REF__'`) in the same file `sed` rewrites — so that comparison
+  string got substituted too, and the check always came back true, always falling back to the
+  moving `main` branch URL it was meant to stop using. Detection is now shape-based (a 40-char hex
+  SHA) instead of comparing against the placeholder text.
+
 ## [0.1.2] - 2026-09-15
 
 ### Fixed

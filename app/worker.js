@@ -15,13 +15,17 @@
 
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js');
 
-// __APP_REF__ is substituted by the GitHub Actions Pages workflow at deploy time with the exact
-// commit SHA (see .github/workflows/pages.yml) -- sw.js's runtime cache is cache-first and keyed
-// only by URL, so fetching from a moving ref like `main` would mean the first-ever cached copy of
-// xprot's source wins forever, silently going stale on every later release. Pinning to the exact
-// commit makes each deploy's fetch a fresh cache key instead, the same way the Pyodide/pip URLs
-// below are already safe to cache-first because they're pinned to specific versions.
+// The placeholder below is substituted by the GitHub Actions Pages workflow at deploy time with
+// the exact commit SHA (see .github/workflows/pages.yml) -- sw.js's runtime cache is cache-first
+// and keyed only by URL, so fetching from a moving ref like `main` would mean the first-ever
+// cached copy of xprot's source wins forever, silently going stale on every later release.
+// Pinning to the exact commit makes each deploy's fetch a fresh cache key instead, the same way
+// the Pyodide/pip URLs below are already safe to cache-first because they're pinned to specific
+// versions. Detected by shape (a 40-char hex SHA), not by comparing against the placeholder text
+// itself -- that text lives in this same substituted file, so a direct comparison would silently
+// always match the substituted value and defeat the whole point.
 const APP_REF = '__APP_REF__';
+const IS_PINNED_REF = /^[0-9a-f]{40}$/.test(APP_REF);
 
 // On localhost serve files from the local project tree so changes are reflected
 // immediately without a GitHub push. On any other host (e.g. GitHub Pages) fall
@@ -34,7 +38,7 @@ const BASE = (
   location.hostname === '::'              // IPv6 any-address (python -m http.server default)
 )
   ? '../src/xprot/'
-  : `https://raw.githubusercontent.com/lucas-ebi/xprot/${APP_REF === '__APP_REF__' ? 'main' : APP_REF}/src/xprot/`;
+  : `https://raw.githubusercontent.com/lucas-ebi/xprot/${IS_PINNED_REF ? APP_REF : 'main'}/src/xprot/`;
 
 const XPROT_FILES = [
   '__init__.py', 'app.py', 'render.py',
