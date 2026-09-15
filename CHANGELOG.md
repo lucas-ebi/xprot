@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Not yet done
+
+- A contract test against an external reference alignment/tree.
+
+## [0.2.1] - 2026-09-15
+
+### Added
+
+- `app/main.js` now calls `registration.update()` whenever the tab regains focus
+  (`visibilitychange`), not just on navigation. Previously a tab left open across a deploy had no
+  way to learn about it until the next full page load, so the update banner (and the "Reload"
+  button that activates the new service worker) could stay unreachable indefinitely in a
+  long-lived tab.
+
 ### Fixed
 
 - `pages.yml` triggered on every push to `main` touching `app/**` *and* on every `v*` tag push,
@@ -13,10 +27,6 @@
   response. Deploys now trigger only on `v*` tag pushes (plus manual `workflow_dispatch`), so
   `git describe --tags --always` always resolves to the clean tag with no fallback suffix, and each
   release is exactly one deploy.
-
-### Not yet done
-
-- A contract test against an external reference alignment/tree.
 
 ## [0.2.0] - 2026-09-15
 

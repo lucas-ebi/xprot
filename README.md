@@ -14,7 +14,7 @@ Every choice — the conservation threshold, the weighting scheme, literal vs. e
 plain function parameter with a default; runs are deterministic.
 
 > [!NOTE]
-> **Status: v0.2.0, working.** The analysis pipeline is an importable library (`xprot.core`:
+> **Status: v0.2.1, working.** The analysis pipeline is an importable library (`xprot.core`:
 > alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and typicality,
 > transformation-event generation, fixture comparison), `xprot.app.run_design`, which chains the
 > whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the `x-prot`

@@ -602,5 +602,13 @@ if ('serviceWorker' in navigator) {
 
     // Fires once the SKIP_WAITING'd worker actually takes control -- pick up its assets.
     navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+
+    // The browser only checks for a new service worker on navigation, so a tab left open
+    // across a deploy would otherwise never learn about it until the next full reload. Ask
+    // explicitly whenever the tab regains focus, so returning to an already-open tab surfaces
+    // the update banner on its own.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') swRegistration?.update();
+    });
   }
 }
