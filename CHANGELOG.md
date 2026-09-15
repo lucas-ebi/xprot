@@ -6,6 +6,19 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.1.2] - 2026-09-15
+
+### Fixed
+
+- `app/worker.js` fetched xprot's own Python source from the `main` branch by URL, and
+  `app/sw.js`'s runtime cache is cache-first keyed only by URL — so the first-ever cached copy of
+  e.g. `render.py` would keep being served forever, silently going stale on every later release
+  (this broke `v0.1.1` in production: an `ImportError: cannot import name 'render_pairwise_json'`
+  from a `render.py` cached before that function existed). Now pinned to the exact deployed commit
+  SHA (`__APP_REF__`, injected the same way as `__APP_VERSION__`), so each release's fetch is a
+  fresh cache key instead of overwriting a stale one — matching how the Pyodide/pip URLs are
+  already safe to cache-first, since those are pinned to specific versions.
+
 ## [0.1.1] - 2026-09-15
 
 ### Added

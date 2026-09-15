@@ -15,9 +15,18 @@
 
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js');
 
+// __APP_REF__ is substituted by the GitHub Actions Pages workflow at deploy time with the exact
+// commit SHA (see .github/workflows/pages.yml) -- sw.js's runtime cache is cache-first and keyed
+// only by URL, so fetching from a moving ref like `main` would mean the first-ever cached copy of
+// xprot's source wins forever, silently going stale on every later release. Pinning to the exact
+// commit makes each deploy's fetch a fresh cache key instead, the same way the Pyodide/pip URLs
+// below are already safe to cache-first because they're pinned to specific versions.
+const APP_REF = '__APP_REF__';
+
 // On localhost serve files from the local project tree so changes are reflected
 // immediately without a GitHub push. On any other host (e.g. GitHub Pages) fall
-// back to fetching from the published main branch.
+// back to fetching from the exact deployed commit (or `main`, for a local static preview that
+// hasn't been through the deploy step's substitution).
 const BASE = (
   location.hostname === 'localhost'  ||
   location.hostname === '127.0.0.1' ||
@@ -25,7 +34,7 @@ const BASE = (
   location.hostname === '::'              // IPv6 any-address (python -m http.server default)
 )
   ? '../src/xprot/'
-  : 'https://raw.githubusercontent.com/lucas-ebi/xprot/main/src/xprot/';
+  : `https://raw.githubusercontent.com/lucas-ebi/xprot/${APP_REF === '__APP_REF__' ? 'main' : APP_REF}/src/xprot/`;
 
 const XPROT_FILES = [
   '__init__.py', 'app.py', 'render.py',

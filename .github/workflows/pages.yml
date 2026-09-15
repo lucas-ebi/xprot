@@ -32,8 +32,10 @@ jobs:
       - name: Inject version
         run: |
           version="$(git describe --tags --always)"
-          echo "Deploying version: $version"
+          ref="$(git rev-parse HEAD)"
+          echo "Deploying version: $version ($ref)"
           sed -i "s/__APP_VERSION__/$version/g" app/index.html app/sw.js
+          sed -i "s/__APP_REF__/$ref/g" app/worker.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
