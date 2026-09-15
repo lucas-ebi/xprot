@@ -11,14 +11,15 @@ per-position frequencies, and rule that produced each change. See
 Every choice — the conservation threshold, the weighting scheme, literal vs. expanded mode — is a
 plain function parameter with a default; runs are deterministic.
 
-**Status: v0.1.3, working.** The analysis pipeline is an importable library (`xprot.core`:
-alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and typicality,
-transformation-event generation, fixture comparison), `xprot.app.run_design`, which chains the
-whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the `x-prot`
-command-line tool, and a browser UI (`app/`) running the same package in-browser as an installable,
-offline-capable PWA. Gate is green (`ruff`, `ruff format`, `mypy --strict`, tests); the browser UI
-is deployed and verified working on GitHub Pages. Not yet done: a contract test against an external
-reference alignment/tree.
+> [!NOTE]
+> **Status: v0.1.3, working.** The analysis pipeline is an importable library (`xprot.core`:
+> alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and typicality,
+> transformation-event generation, fixture comparison), `xprot.app.run_design`, which chains the
+> whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the `x-prot`
+> command-line tool, and a browser UI (`app/`) running the same package in-browser as an
+> installable, offline-capable PWA. Gate is green (`ruff`, `ruff format`, `mypy --strict`, tests);
+> the browser UI is deployed and verified working on GitHub Pages. Not yet done: a contract test
+> against an external reference alignment/tree.
 
 ## Install
 
