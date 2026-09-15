@@ -25,7 +25,6 @@ __all__ = [
     "EventType",
     "FrozenModel",
     "LabelSource",
-    "PartitionSemantics",
     "RootingMethod",
     "Severity",
     "SubfamilyLabel",
@@ -34,11 +33,6 @@ __all__ = [
 
 # Closed choice sets. Standalone string enums used as function parameters (StrEnum, so callers may
 # also pass the bare string).
-
-
-class PartitionSemantics(StrEnum):
-    TWO_CHILD_CLADES = "two_child_clades"
-    SELECTED_CLADE_VS_COMPLEMENT = "selected_clade_vs_complement"
 
 
 class RootingMethod(StrEnum):

@@ -6,6 +6,53 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.2.0] - 2026-09-15
+
+### Changed
+
+- The CLI, browser UI, and `xprot.app.run_design` no longer take a separate internal-node
+  selector. `x-prot design`'s `--node-tips`/`--node-label` flags are removed; `run_design` drops
+  its `node`/`semantics` parameters. The internal node is now always the most-recent-common
+  ancestor (MRCA) of `--recipient`/`--donor` in the tree, resolved by the new
+  `xprot.core.tree.resolve_partition(tree, recipient, donor)`. This is more capable than the
+  previous two-children-only resolution, not just shorter: the MRCA may have more than two
+  children (a polytomy), and only the two children containing `recipient`/`donor` become the two
+  subfamilies, ignoring any other sibling branches at that node — previously such a node was
+  rejected outright. Migration: `--node-tips "a,b,c,d" --recipient a --donor c` becomes
+  `--recipient a --donor c`. One consequence: since `--recipient`/`--donor` now always resolve to
+  different subfamilies by construction, the CLI's "recipient and donor in the same subfamily"
+  failure (exit code 5) is no longer reachable through it — it stays defined for library callers
+  of `xprot.app.run_design` that pass `mode=EXPANDED` without a `class_table`, which the CLI
+  doesn't expose either.
+- The old label- and whole-clade-vs-complement node-selection API (`xprot.core.models.NodeSelector`,
+  the old `resolve_partition(tree, NodeSelector, semantics=...)`, and
+  `PartitionSemantics.SELECTED_CLADE_VS_COMPLEMENT`) is removed entirely, since nothing in the CLI
+  or browser UI used it once the above landed. `PartitionSemantics` itself, and
+  `CanonicalPartition.semantics`, are removed too — with only one resolution strategy left, the
+  field was always the same constant and carried no information (it was never serialized into any
+  output). `Phylogeny.iter_nodes()` and `TreeNode.is_leaf` are also removed, having existed only to
+  support the old label-based lookup.
+- The browser UI's tree preview no longer requires clicking an internal node before picking
+  representatives: click any leaf to set the donor, then any other leaf to set the recipient, and
+  the app derives and highlights the relevant two clades automatically. The "Node selected"
+  checklist item is now a derived "Node resolved" indicator rather than a separate manual step.
+
+- `design.py`'s literal-mode (and expanded-mode) transformation rule no longer excludes a
+  donor-typical state just because the recipient subfamily's own weighted profile is *also*
+  typical for it. Previously `_pick_target` computed candidates as
+  `donor_typical - recipient_typical`; that exclusion was checked against the recipient
+  subfamily's aggregate profile, not the specific recipient representative being edited, so a
+  representative sequence that happened to be an outlier from a state both subfamilies otherwise
+  share would silently keep that outlier residue instead of picking up the donor's conserved
+  state. The donor side of the rule was already profile-only (no donor alignment row is ever
+  read, only its clade's typical states/frequencies); the recipient side is representative-only
+  (only `source_state`, this one sequence's own residue, matters). The rule is now simply: propose
+  the donor clade's typical state at a column whenever the representative doesn't already carry
+  it. Added `test_literal_uses_donor_typical_state_regardless_of_recipient_typicality` covering
+  the case that changed; every existing `test_design.py` fixture already had donor/recipient
+  typical states differing (or matching *and* the representative already carrying that state), so
+  none of them exercised this edge case before.
+
 ## [0.1.4] - 2026-09-15
 
 ### Added

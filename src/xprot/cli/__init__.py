@@ -1,9 +1,11 @@
 """The ``x-prot`` command-line tool.
 
 Exit codes: ``0`` success, ``2`` usage error (argparse itself), ``3`` the alignment, tree, or class
-table could not be parsed, ``4`` the alignment/tree identifiers do not map one-to-one or the
-requested node cannot be resolved, ``5`` the transformation could not be computed (e.g. recipient
-and donor in the same subfamily).
+table could not be parsed, ``4`` the alignment/tree identifiers do not map one-to-one, or
+``--recipient``/``--donor`` can't be resolved to tips in the tree, ``5`` the transformation could
+not be computed (``--recipient``/``--donor`` always resolve to different subfamilies by
+construction, so this CLI has no way to trigger it; kept for parity with
+``xprot.app.run_design``'s ``mode``/``class_table`` parameters, which this CLI doesn't expose).
 """
 
 from __future__ import annotations
@@ -21,7 +23,6 @@ from xprot.core.errors import (
     IdentifierError,
     TreeError,
 )
-from xprot.core.models import NodeSelector
 from xprot.core.profile import DEFAULT_THRESHOLD
 from xprot.render import (
     render_diagnostics_json,
@@ -52,11 +53,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     design.add_argument("--alignment", required=True, type=Path)
     design.add_argument("--tree", required=True, type=Path)
-    node = design.add_mutually_exclusive_group(required=True)
-    node.add_argument("--node-tips", help="comma-separated tip ids of the internal node")
-    node.add_argument("--node-label", help="label of the internal node")
-    design.add_argument("--recipient", required=True)
-    design.add_argument("--donor", required=True)
+    design.add_argument("--recipient", required=True, help="id of the representative to edit")
+    design.add_argument(
+        "--donor",
+        required=True,
+        help="any tip in the donor clade -- only its clade's profile is used, not this "
+        "sequence's own residues",
+    )
     design.add_argument(
         "--threshold",
         type=float,
@@ -81,17 +84,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _design(args: argparse.Namespace) -> int:
-    if args.node_tips is not None:
-        tips = frozenset(t.strip() for t in args.node_tips.split(",") if t.strip())
-        node = NodeSelector(tips=tips)
-    else:
-        node = NodeSelector(label=args.node_label)
-
     try:
         result = run_design(
             args.alignment,
             args.tree,
-            node,
             recipient=args.recipient,
             donor=args.donor,
             threshold=args.threshold,

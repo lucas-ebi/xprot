@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from xprot.core.models import CanonicalPartition, TransformationEvent, TransformedResult
-from xprot.core.primitives import Diagnostic, EventType, PartitionSemantics, Severity
+from xprot.core.primitives import Diagnostic, EventType, Severity
 from xprot.render import (
     render_diagnostics_json,
     render_events_json,
@@ -53,9 +53,7 @@ RESULT = TransformedResult(
     events=EVENTS,
 )
 
-PARTITION = CanonicalPartition(
-    ("a2", "b2", "d1", "r1"), ("a2", "r1"), ("b2", "d1"), PartitionSemantics.TWO_CHILD_CLADES
-)
+PARTITION = CanonicalPartition(("a2", "b2", "d1", "r1"), ("a2", "r1"), ("b2", "d1"))
 
 
 def test_render_events_tsv() -> None:

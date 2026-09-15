@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from xprot.core.primitives import Diagnostic, PartitionSemantics, Severity
+from xprot.core.primitives import Diagnostic, RootingMethod, Severity
 
 
 def test_diagnostic_is_frozen_and_rejects_unknown_fields() -> None:
@@ -24,6 +24,6 @@ def test_diagnostic_round_trips_and_enum_serialises_to_value() -> None:
 
 
 def test_choice_enum_constructs_from_its_value() -> None:
-    assert PartitionSemantics("two_child_clades") is PartitionSemantics.TWO_CHILD_CLADES
-    assert PartitionSemantics.TWO_CHILD_CLADES.value == "two_child_clades"
-    assert str(PartitionSemantics.TWO_CHILD_CLADES) == "two_child_clades"
+    assert RootingMethod("midpoint") is RootingMethod.MIDPOINT
+    assert RootingMethod.MIDPOINT.value == "midpoint"
+    assert str(RootingMethod.MIDPOINT) == "midpoint"

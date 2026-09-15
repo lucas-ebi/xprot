@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from xprot.core.primitives import Diagnostic, EventType, PartitionSemantics, SubfamilyLabel
+from xprot.core.primitives import Diagnostic, EventType, SubfamilyLabel
 
 __all__ = [
     "Alignment",
@@ -17,7 +17,6 @@ __all__ = [
     "ClassProfile",
     "CoordinateMap",
     "FixtureComparison",
-    "NodeSelector",
     "Phylogeny",
     "ProfileSet",
     "ResidueProfile",
@@ -110,10 +109,6 @@ class TreeNode:
     label: str | None = None
     branch_length: float | None = None
 
-    @property
-    def is_leaf(self) -> bool:
-        return not self.children
-
 
 @dataclass(frozen=True, slots=True)
 class Phylogeny:
@@ -123,35 +118,12 @@ class Phylogeny:
     def tips(self) -> tuple[str, ...]:
         return self.root.descendant_tips
 
-    def iter_nodes(self) -> list[TreeNode]:
-        out: list[TreeNode] = []
-        stack = [self.root]
-        while stack:
-            node = stack.pop()
-            out.append(node)
-            stack.extend(node.children)
-        return out
-
-
-@dataclass(frozen=True, slots=True)
-class NodeSelector:
-    """How the caller names the internal node: a descendant-tip set or a unique label."""
-
-    tips: frozenset[str] | None = None
-    label: str | None = None
-
-    def __post_init__(self) -> None:
-        if (self.tips is None) == (self.label is None):
-            msg = "NodeSelector needs exactly one of `tips` or `label`"
-            raise ValueError(msg)
-
 
 @dataclass(frozen=True, slots=True)
 class CanonicalPartition:
     selected_tips: tuple[str, ...]
     subfamily_a_tips: tuple[str, ...]
     subfamily_b_tips: tuple[str, ...]
-    semantics: PartitionSemantics
 
     def tips_for(self, label: SubfamilyLabel) -> tuple[str, ...]:
         return self.subfamily_a_tips if label is SubfamilyLabel.A else self.subfamily_b_tips

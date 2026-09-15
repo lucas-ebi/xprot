@@ -11,13 +11,12 @@ from xprot.core.classes import load_class_table
 from xprot.core.design import generate_transformation
 from xprot.core.errors import IdentifierError
 from xprot.core.identifiers import IdentifierMapping, resolve_id_mapping
-from xprot.core.models import CanonicalPartition, NodeSelector, TransformedResult
+from xprot.core.models import CanonicalPartition, TransformedResult
 from xprot.core.primitives import (
     AmbiguityPolicy,
     Denominator,
     DesignMode,
     LabelSource,
-    PartitionSemantics,
     RootingMethod,
     Severity,
 )
@@ -38,7 +37,6 @@ class RunResult:
 def run_design(
     alignment_source: Path | str,
     tree_source: Path | str,
-    node: NodeSelector,
     *,
     recipient: str,
     donor: str,
@@ -53,7 +51,6 @@ def run_design(
     alignment_label_source: LabelSource = LabelSource.FIRST_TOKEN,
     tree_label_source: LabelSource = LabelSource.FULL_LABEL,
     aliases: dict[str, str] | None = None,
-    semantics: PartitionSemantics = PartitionSemantics.TWO_CHILD_CLADES,
     denominator: Denominator = Denominator.ALL_SUBFAMILY_WEIGHTS,
     occupancy_threshold: float | None = None,
     threshold: float = DEFAULT_THRESHOLD,
@@ -95,7 +92,7 @@ def run_design(
         msg = f"alignment and tree identifiers do not map one-to-one: {', '.join(codes)}"
         raise IdentifierError(msg)
 
-    partition = resolve_partition(tree, node, semantics=semantics)
+    partition = resolve_partition(tree, recipient, donor)
     weights = calculate_henikoff_weights(alignment)
     profiles = calculate_profiles(
         alignment,

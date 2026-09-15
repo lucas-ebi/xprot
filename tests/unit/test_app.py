@@ -6,7 +6,6 @@ import pytest
 
 from xprot.app import run_design
 from xprot.core.errors import IdentifierError
-from xprot.core.models import NodeSelector
 from xprot.core.primitives import DesignMode
 
 FASTA = ">r1\nMH-T\n>a2\nMHAT\n>d1\nMKGT\n>b2\nMKGT\n"
@@ -23,9 +22,8 @@ def _write(tmp_path: Path, fasta: str, newick: str) -> tuple[Path, Path]:
 
 def test_run_design_chains_the_pipeline(tmp_path: Path) -> None:
     aln_path, tree_path = _write(tmp_path, FASTA, NEWICK)
-    node = NodeSelector(tips=frozenset({"r1", "a2", "d1", "b2"}))
 
-    result = run_design(aln_path, tree_path, node, recipient="r1", donor="d1")
+    result = run_design(aln_path, tree_path, recipient="r1", donor="d1")
 
     assert result.id_mapping.is_bijective
     assert result.partition.subfamily_a_tips == ("a2", "r1")
@@ -42,12 +40,10 @@ def test_run_design_with_class_table_path(tmp_path: Path) -> None:
     aln_path, tree_path = _write(tmp_path, ">r1\nD\n>a2\nD\n>d1\nK\n>b2\nK\n", "((r1,a2),(d1,b2));")
     table_path = tmp_path / "classes.yaml"
     table_path.write_text("classes:\n  Basic: HKR\n  Acidic: DE\n", encoding="utf-8")
-    node = NodeSelector(tips=frozenset({"r1", "a2", "d1", "b2"}))
 
     result = run_design(
         aln_path,
         tree_path,
-        node,
         recipient="r1",
         donor="d1",
         mode=DesignMode.EXPANDED,
@@ -60,7 +56,6 @@ def test_run_design_with_class_table_path(tmp_path: Path) -> None:
 
 def test_run_design_rejects_unmapped_identifiers(tmp_path: Path) -> None:
     aln_path, tree_path = _write(tmp_path, FASTA, "((r1,a2),(d1,ghost));")
-    node = NodeSelector(label="")
 
     with pytest.raises(IdentifierError):
-        run_design(aln_path, tree_path, node, recipient="r1", donor="d1")
+        run_design(aln_path, tree_path, recipient="r1", donor="d1")

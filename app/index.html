@@ -103,9 +103,9 @@
           <span class="wiz-summary"></span>
         </button>
         <div class="wiz-collapse"><div class="wiz-body">
-          <p class="wiz-hint">Click an internal node in the tree to split it into two colored clades, then click any leaf to set the donor, then a leaf in the other clade to set the recipient.</p>
+          <p class="wiz-hint">Click any leaf in the tree to set the donor, then any other leaf to set the recipient.</p>
           <ul class="wiz-checklist" id="wiz-checklist">
-            <li id="check-node">Internal node selected</li>
+            <li id="check-node">Node resolved</li>
             <li id="check-donor">Donor picked</li>
             <li id="check-recipient">Recipient picked</li>
           </ul>
@@ -113,17 +113,7 @@
           <details class="det" style="margin-top:0.5rem">
             <summary>Manual entry</summary>
             <div class="det-inner">
-              <div class="ctrl-label">Internal node</div>
-              <div class="field">
-                <label><input type="radio" name="node-mode" value="tips" id="node-mode-tips" checked> Tip ids</label>
-                <input type="text" id="node-tips" placeholder="seqA,seqB,seqC,seqD">
-              </div>
-              <div class="field">
-                <label><input type="radio" name="node-mode" value="label" id="node-mode-label"> Label</label>
-                <input type="text" id="node-label" placeholder="internal node label" disabled>
-              </div>
-
-              <div class="ctrl-label" style="margin-top:0.5rem">Representatives</div>
+              <div class="ctrl-label">Representatives</div>
               <div class="field">
                 <label for="recipient">Recipient id <span class="hint">(changed toward the donor)</span></label>
                 <input type="text" id="recipient" required>
@@ -182,10 +172,11 @@
       <summary>About X-Prot</summary>
       <div class="det-inner">
         <p class="about-text">
-          X-Prot picks an internal node of a phylogenetic tree and one representative sequence
-          from each of its two child clades. It computes weighted residue conservation per clade
-          and proposes the substitutions, insertions, and deletions that change one representative
-          into a sequence carrying the other clade's conserved residues.
+          X-Prot takes a recipient representative sequence and a donor tip identifying the clade
+          to compare it against — their most-recent-common-ancestor in the tree splits into the
+          two subfamilies. It computes weighted residue conservation per clade and proposes the
+          substitutions, insertions, and deletions that change the recipient into a sequence
+          carrying the donor clade's conserved residues.
         </p>
         <p class="about-text">
           See the <a href="https://github.com/lucas-ebi/xprot#x-prot" target="_blank" rel="noopener">README</a>
@@ -231,7 +222,7 @@
             <line x1="16" y1="36" x2="40" y2="36"/>
           </svg>
         </div>
-        <span id="msg-tree">Paste or upload a Newick tree in the sidebar to preview it — click an internal node with two child clades to select it, then click a leaf in each clade to set the donor and recipient.</span>
+        <span id="msg-tree">Paste or upload a Newick tree in the sidebar to preview it — click any leaf to set the donor, then any other leaf to set the recipient.</span>
       </div>
       <div class="panel-content" id="panel-tree"></div>
     </div>

@@ -10,8 +10,8 @@ from typing import Any
 from Bio import Phylo
 
 from xprot.core.errors import TreeError
-from xprot.core.models import CanonicalPartition, NodeSelector, Phylogeny, TreeNode
-from xprot.core.primitives import PartitionSemantics, RootingMethod
+from xprot.core.models import CanonicalPartition, Phylogeny, TreeNode
+from xprot.core.primitives import RootingMethod
 
 __all__ = ["load_tree", "parse_tree", "resolve_partition"]
 
@@ -102,48 +102,42 @@ def _convert(clade: Any) -> TreeNode:
     )
 
 
-def resolve_partition(
-    tree: Phylogeny,
-    selector: NodeSelector,
-    *,
-    semantics: PartitionSemantics = PartitionSemantics.TWO_CHILD_CLADES,
-) -> CanonicalPartition:
-    """Resolve ``selector`` to an internal node and split it into two subfamilies."""
-    semantics = PartitionSemantics(semantics)
-    node = _resolve_node(tree, selector)
+def resolve_partition(tree: Phylogeny, recipient: str, donor: str) -> CanonicalPartition:
+    """Resolve the MRCA of ``recipient`` and ``donor`` and split it into their two subfamilies.
 
-    if semantics is PartitionSemantics.TWO_CHILD_CLADES:
-        if len(node.children) != 2:
-            raise TreeError(
-                f"two_child_clades needs a node with exactly two children, got {len(node.children)}"
-            )
-        a_tips, b_tips = node.children[0].descendant_tips, node.children[1].descendant_tips
-    else:  # SELECTED_CLADE_VS_COMPLEMENT
-        a_tips = node.descendant_tips
-        b_tips = tuple(t for t in tree.tips if t not in set(a_tips))
-        if not a_tips or not b_tips:
-            raise TreeError("selected_clade_vs_complement needs both sides non-empty")
+    The MRCA may have more than two children (a polytomy) -- only the two children that
+    respectively contain ``recipient`` and ``donor`` become the two subfamilies; any other sibling
+    children at that node are ignored. By definition of MRCA this always yields two *distinct*
+    children: if both tips were under the same child, that child would itself be a deeper common
+    ancestor, contradicting the node being the *most recent* common ancestor.
+    """
+    tips = set(tree.tips)
+    missing = sorted(t for t in {recipient, donor} if t not in tips)
+    if missing:
+        raise TreeError(f"tip ids not in the tree: {', '.join(missing)}")
+    if recipient == donor:
+        raise TreeError("recipient and donor must be different tips")
+
+    node = _mrca(tree.root, recipient, donor)
+    child_a = _child_containing(node, recipient)
+    child_b = _child_containing(node, donor)
 
     return CanonicalPartition(
-        selected_tips=node.descendant_tips,
-        subfamily_a_tips=a_tips,
-        subfamily_b_tips=b_tips,
-        semantics=semantics,
+        selected_tips=tuple(sorted({*child_a.descendant_tips, *child_b.descendant_tips})),
+        subfamily_a_tips=child_a.descendant_tips,
+        subfamily_b_tips=child_b.descendant_tips,
     )
 
 
-def _resolve_node(tree: Phylogeny, selector: NodeSelector) -> TreeNode:
-    nodes = tree.iter_nodes()
-    if selector.tips is not None:
-        target = tuple(sorted(selector.tips))
-        matches = [n for n in nodes if n.descendant_tips == target]
-        if not matches:
-            raise TreeError(f"no node has exactly the descendant tips {target}")
-        return matches[0]
+def _mrca(node: TreeNode, tip_a: str, tip_b: str) -> TreeNode:
+    for child in node.children:
+        if tip_a in child.descendant_tips and tip_b in child.descendant_tips:
+            return _mrca(child, tip_a, tip_b)
+    return node
 
-    matches = [n for n in nodes if n.label == selector.label and not n.is_leaf]
-    if not matches:
-        raise TreeError(f"no internal node is labelled {selector.label!r}")
-    if len(matches) > 1:
-        raise TreeError(f"internal label {selector.label!r} is ambiguous ({len(matches)} nodes)")
-    return matches[0]
+
+def _child_containing(node: TreeNode, tip: str) -> TreeNode:
+    for child in node.children:
+        if tip in child.descendant_tips:
+            return child
+    raise TreeError(f"internal error: {tip!r} not found under its own MRCA")  # unreachable

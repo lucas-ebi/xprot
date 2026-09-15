@@ -98,13 +98,8 @@ self.onmessage = async ({data}) => {
       pyodide.FS.writeFile(alnPath, r.alignmentText);
       pyodide.FS.writeFile(treePath, r.treeText);
 
-      const nodeArg = r.nodeTips
-        ? `NodeSelector(tips=frozenset(${JSON.stringify(r.nodeTips.split(',').map(t => t.trim()).filter(Boolean))}))`
-        : `NodeSelector(label=${JSON.stringify(r.nodeLabel)})`;
-
       await pyodide.runPythonAsync(`
 from pathlib import Path
-from xprot.core.models import NodeSelector
 from xprot.app import run_design
 from xprot.render import (
     render_events_tsv, render_events_json, render_transformed_fasta,
@@ -112,7 +107,7 @@ from xprot.render import (
 )
 
 _result = run_design(
-    ${JSON.stringify(alnPath)}, ${JSON.stringify(treePath)}, ${nodeArg},
+    ${JSON.stringify(alnPath)}, ${JSON.stringify(treePath)},
     recipient=${JSON.stringify(r.recipient)}, donor=${JSON.stringify(r.donor)},
     threshold=${JSON.stringify(r.threshold)},
     deletions=${r.deletions ? 'True' : 'False'},

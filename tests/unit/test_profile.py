@@ -6,7 +6,7 @@ import pytest
 
 from xprot.core.alignment import parse_alignment
 from xprot.core.models import CanonicalPartition, ProfileSet, ResidueProfile
-from xprot.core.primitives import Denominator, PartitionSemantics, SubfamilyLabel
+from xprot.core.primitives import Denominator, SubfamilyLabel
 from xprot.core.profile import calculate_profiles, determine_typical_states
 from xprot.core.weights import calculate_henikoff_weights
 
@@ -18,7 +18,6 @@ def _profiles(fasta: str, a: tuple[str, ...], b: tuple[str, ...], **kw: Any) -> 
         selected_tips=tuple(sorted((*a, *b))),
         subfamily_a_tips=a,
         subfamily_b_tips=b,
-        semantics=PartitionSemantics.TWO_CHILD_CLADES,
     )
     return calculate_profiles(aln, part, weights, **kw)
 

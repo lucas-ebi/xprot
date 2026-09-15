@@ -7,14 +7,13 @@ from xprot.core.models import (
     AlignmentRow,
     CanonicalPartition,
     CoordinateMap,
-    NodeSelector,
     SequenceWeight,
     TransformationEvent,
     TransformedResult,
     TypicalState,
     TypicalStateSet,
 )
-from xprot.core.primitives import EventType, PartitionSemantics, SubfamilyLabel
+from xprot.core.primitives import EventType, SubfamilyLabel
 
 GAPS = frozenset("-")
 
@@ -46,19 +45,8 @@ def test_alignment_helpers() -> None:
         aln.row("nope")
 
 
-def test_node_selector_requires_exactly_one() -> None:
-    NodeSelector(tips=frozenset({"a", "b"}))
-    NodeSelector(label="n1")
-    with pytest.raises(ValueError):
-        NodeSelector()
-    with pytest.raises(ValueError):
-        NodeSelector(tips=frozenset({"a"}), label="n1")
-
-
 def test_partition_tips_for() -> None:
-    part = CanonicalPartition(
-        ("a", "b", "c"), ("a", "b"), ("c",), PartitionSemantics.TWO_CHILD_CLADES
-    )
+    part = CanonicalPartition(("a", "b", "c"), ("a", "b"), ("c",))
     assert part.tips_for(SubfamilyLabel.A) == ("a", "b")
     assert part.tips_for(SubfamilyLabel.B) == ("c",)
 

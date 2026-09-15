@@ -128,13 +128,13 @@ wireFileInput('tree-file', 'tree-text');
 wireDropZone('aln-dropzone', 'aln-text');
 wireDropZone('tree-dropzone', 'tree-text');
 
-// ── Interactive tree: click an internal node, then click a leaf in each of its
-// two child clades to set recipient/donor, instead of typing ids. ─────────────
+// ── Interactive tree: click any leaf to set the donor, then any other leaf to
+// set the recipient, instead of typing ids. The internal node is their most-
+// recent-common-ancestor, resolved automatically once both are picked. ───────
 const DEFAULT_TREE_MSG =
-  'Paste or upload a Newick tree in the sidebar to preview it — click an internal node with ' +
-  'two child clades to select it, then click a leaf in each clade to set the donor and recipient.';
+  'Paste or upload a Newick tree in the sidebar to preview it — click any leaf to set the ' +
+  'donor, then any other leaf to set the recipient.';
 
-let selectedNodeKey = null;
 let recipientLeaf = null;
 let donorLeaf = null;
 let activeLeafPopover = null;
@@ -142,7 +142,6 @@ let currentStep = 1;
 let viewStep = 1;
 
 function resetTreeSelection() {
-  selectedNodeKey = null;
   recipientLeaf = null;
   donorLeaf = null;
   document.getElementById('recipient').value = '';
@@ -203,18 +202,6 @@ function openLeafPopover(name, cladeIdx, clientX, clientY, donorClade) {
   activeLeafPopover = {el: pop, onDocClick, onKeydown};
 }
 
-function handleSelectNode(key) {
-  const reselecting = selectedNodeKey === key;
-  resetTreeSelection();
-  if (!reselecting) {
-    selectedNodeKey = key;
-    document.getElementById('node-mode-tips').checked = true;
-    document.getElementById('node-tips').value = key;
-    syncNodeMode();
-  }
-  renderTreePreview();
-}
-
 function renderTreePreview() {
   closeLeafPopover();
   const panel = document.getElementById('panel-tree');
@@ -247,42 +234,40 @@ function renderTreePreview() {
     return;
   }
 
-  const selectedNode = findNodeByKey(root, selectedNodeKey);
-  if (selectedNodeKey && !selectedNode) resetTreeSelection();
+  const treeLeaves = new Set(leafNames(root));
+  if ((donorLeaf && !treeLeaves.has(donorLeaf)) || (recipientLeaf && !treeLeaves.has(recipientLeaf))) {
+    resetTreeSelection();
+  }
 
   const highlights = [];
   const markers = [];
   let isPickable = null;
   let cladeOf = null;
-  let hintText = 'Click an internal node with two child clades to select it.';
+  let hintText;
   let hintReady = false;
 
-  if (selectedNode && selectedNode.children.length === 2) {
-    const tips0 = new Set(leafNames(selectedNode.children[0]));
-    const tips1 = new Set(leafNames(selectedNode.children[1]));
-    cladeOf = name => (tips0.has(name) ? 0 : tips1.has(name) ? 1 : null);
-    const donorClade = cladeOf(donorLeaf);
-    const recipientClade = cladeOf(recipientLeaf);
-    // Donor is picked first, so its clade claims the donor color as soon as it's known.
-    const greenIdx = donorClade !== null ? donorClade : recipientClade !== null ? 1 - recipientClade : 1;
-    const blueIdx = 1 - greenIdx;
-    const cladeTips = [tips0, tips1];
-    highlights.push({tips: cladeTips[blueIdx], color: '#3b6fb6', label: 'Clade ' + (blueIdx + 1)});
-    highlights.push({tips: cladeTips[greenIdx], color: '#18974c', label: 'Clade ' + (greenIdx + 1)});
-    if (recipientLeaf) markers.push({tips: new Set([recipientLeaf]), badge: 'R', color: '#193f90'});
-    if (donorLeaf) markers.push({tips: new Set([donorLeaf]), badge: 'D', color: '#0a5032'});
-    isPickable = cladeOf;
-
-    if (!donorLeaf) {
-      hintText = `Node selected: ${tips0.size + tips1.size} tips, split into clades of `
-        + `${tips0.size} and ${tips1.size}. Click any leaf to set the donor.`;
-    } else if (!recipientLeaf) {
-      hintText = `Donor: ${donorLeaf} (green clade, ${cladeTips[greenIdx].size} tips). `
-        + `Click a leaf in the blue clade (${cladeTips[blueIdx].size} tips) to set the recipient.`;
-    } else {
-      hintText = `Donor: ${donorLeaf} · Recipient: ${recipientLeaf} — ready to run.`;
+  if (donorLeaf && recipientLeaf) {
+    const pair = findMRCAChildren(root, donorLeaf, recipientLeaf);
+    if (pair) {
+      const [donorChild, recipientChild] = pair;
+      const tipsDonor = new Set(leafNames(donorChild));
+      const tipsRecipient = new Set(leafNames(recipientChild));
+      cladeOf = name => (tipsDonor.has(name) ? 0 : tipsRecipient.has(name) ? 1 : null);
+      highlights.push({tips: tipsRecipient, color: '#3b6fb6', label: 'Recipient clade'});
+      highlights.push({tips: tipsDonor, color: '#18974c', label: 'Donor clade'});
+      markers.push({tips: new Set([recipientLeaf]), badge: 'R', color: '#193f90'});
+      markers.push({tips: new Set([donorLeaf]), badge: 'D', color: '#0a5032'});
+      isPickable = cladeOf;
+      hintText = `Donor: ${donorLeaf} (green clade, ${tipsDonor.size} tips) · `
+        + `Recipient: ${recipientLeaf} (blue clade, ${tipsRecipient.size} tips) — ready to run.`;
       hintReady = true;
     }
+  } else {
+    cladeOf = name => (name === donorLeaf ? 0 : 1);
+    isPickable = cladeOf;
+    hintText = donorLeaf
+      ? `Donor: ${donorLeaf}. Click any other leaf to set the recipient.`
+      : 'Click any leaf to set the donor.';
   }
 
   emptyState.style.display = 'none';
@@ -294,9 +279,7 @@ function renderTreePreview() {
 
   renderTree(treeText, panel, highlights, {
     markers,
-    selectedKey: selectedNodeKey,
     isPickable,
-    onSelectNode: handleSelectNode,
     onLeafClick: (name, cladeIdx, clientX, clientY) => {
       openLeafPopover(name, cladeIdx, clientX, clientY, cladeOf(donorLeaf));
     },
@@ -336,15 +319,6 @@ function stepSummary(step) {
   return recipientVal && donorVal ? `${donorVal} → ${recipientVal}` : '';
 }
 
-// Whichever ids the run will actually use — the "Internal node" fields are shared between
-// clicking the tree (which writes into them) and typing them directly (Manual entry).
-function nodeSelectorFilled() {
-  const byTips = document.getElementById('node-mode-tips').checked;
-  return byTips
-    ? document.getElementById('node-tips').value.trim() !== ''
-    : document.getElementById('node-label').value.trim() !== '';
-}
-
 function stepReady(step) {
   if (step === 1) return document.getElementById('aln-text').value.trim() !== '';
   if (step === 2) {
@@ -354,8 +328,7 @@ function stepReady(step) {
     try { return leafNames(parseNewick(text)).length > 0; } catch (e) { return false; }
   }
   if (step === 3) {
-    return nodeSelectorFilled()
-      && document.getElementById('recipient').value.trim() !== ''
+    return document.getElementById('recipient').value.trim() !== ''
       && document.getElementById('donor').value.trim() !== '';
   }
   return true;
@@ -368,9 +341,9 @@ function goToStep(step) {
 }
 
 function renderWizard() {
-  // The moment node+recipient+donor are all picked for the first time, move on to Run —
-  // but only while step 3 is still the frontier, so navigating back to review/edit it
-  // later doesn't keep bouncing the view forward.
+  // The moment recipient+donor are both picked for the first time, move on to Run — but
+  // only while step 3 is still the frontier, so navigating back to review/edit it later
+  // doesn't keep bouncing the view forward.
   if (viewStep === 3 && currentStep === 3 && stepReady(3)) {
     goToStep(4);
     return;
@@ -388,20 +361,17 @@ function renderWizard() {
 
   const recipientVal = document.getElementById('recipient').value.trim();
   const donorVal = document.getElementById('donor').value.trim();
-  document.getElementById('check-node').classList.toggle('done', nodeSelectorFilled());
+  const bothPicked = !!recipientVal && !!donorVal;
+  document.getElementById('check-node').classList.toggle('done', bothPicked);
   document.getElementById('check-recipient').classList.toggle('done', !!recipientVal);
   document.getElementById('check-donor').classList.toggle('done', !!donorVal);
 
   const runSummary = document.getElementById('wiz-run-summary');
-  if (nodeSelectorFilled() && recipientVal && donorVal) {
-    const byTips = document.getElementById('node-mode-tips').checked;
-    const nodeDesc = byTips
-      ? `${document.getElementById('node-tips').value.split(',').filter(Boolean).length} tips`
-      : `label "${document.getElementById('node-label').value}"`;
-    runSummary.textContent = `Node: ${nodeDesc} · Donor: ${donorVal} · Recipient: ${recipientVal}`;
+  if (bothPicked) {
+    runSummary.textContent = `Donor: ${donorVal} · Recipient: ${recipientVal}`;
     runSummary.classList.add('ready');
   } else {
-    runSummary.textContent = 'Select a node and representatives in the Tree tab.';
+    runSummary.textContent = 'Select a donor and recipient in the Tree tab.';
     runSummary.classList.remove('ready');
   }
 }
@@ -417,11 +387,8 @@ document.querySelectorAll('.wiz-next').forEach(btn => {
 });
 document.getElementById('aln-text').addEventListener('input', renderWizard);
 document.getElementById('aln-format').addEventListener('change', renderWizard);
-['node-tips', 'node-label', 'recipient', 'donor'].forEach(id => {
+['recipient', 'donor'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderWizard);
-});
-['node-mode-tips', 'node-mode-label'].forEach(id => {
-  document.getElementById(id).addEventListener('change', renderWizard);
 });
 
 let treePreviewDebounce = null;
@@ -435,15 +402,6 @@ document.getElementById('tree-format').addEventListener('change', () => {
   renderTreePreview();
 });
 renderTreePreview();
-
-// ── Node-selector radio toggle ──────────────────────────────────────────────
-function syncNodeMode() {
-  const byTips = document.getElementById('node-mode-tips').checked;
-  document.getElementById('node-tips').disabled = !byTips;
-  document.getElementById('node-label').disabled = byTips;
-}
-document.getElementById('node-mode-tips').addEventListener('change', syncNodeMode);
-document.getElementById('node-mode-label').addEventListener('change', syncNodeMode);
 
 // ── File access (output files, written into Pyodide's virtual FS) ──────────
 const textCache = new Map();
@@ -488,7 +446,6 @@ async function runDesign() {
   document.getElementById('files-content').style.display = 'none';
   document.getElementById('empty-files').style.display = '';
 
-  const byTips = document.getElementById('node-mode-tips').checked;
   const treeText = document.getElementById('tree-text').value;
   const thresholdVal = parseFloat(document.getElementById('threshold').value);
   const request = {
@@ -496,8 +453,6 @@ async function runDesign() {
     alignmentFormat: document.getElementById('aln-format').value,
     treeText,
     treeFormat: document.getElementById('tree-format').value,
-    nodeTips: byTips ? document.getElementById('node-tips').value : '',
-    nodeLabel: byTips ? '' : document.getElementById('node-label').value,
     recipient: document.getElementById('recipient').value,
     donor: document.getElementById('donor').value,
     threshold: Number.isFinite(thresholdVal) ? thresholdVal : 0.9,
@@ -525,7 +480,6 @@ async function runDesign() {
       addWarning('The alignment and tree identifiers do not map one-to-one; see Diagnostics.');
     }
 
-    selectedNodeKey = [...summary.subfamily_a_tips, ...summary.subfamily_b_tips].sort().join(',');
     recipientLeaf = summary.recipient_id;
     donorLeaf = summary.donor_id;
     renderTreePreview();

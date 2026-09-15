@@ -45,23 +45,28 @@ function layoutTree(root) {
   return {nLeaves: idx, maxX: maxX || 1};
 }
 
-// Leaf names under `n`, and the sorted-key form used to identify a node from its
-// descendant-tip set (shared with main.js, which resolves clicks back to a node this way).
+// Leaf names under `n`.
 function leafNames(n) {
   return n.children.length ? n.children.flatMap(leafNames) : [n.name];
 }
-function nodeKey(n) {
-  return leafNames(n).slice().sort().join(',');
-}
-function findNodeByKey(root, key) {
-  if (!key) return null;
-  const stack = [root];
-  while (stack.length) {
-    const n = stack.pop();
-    if (n.children.length && nodeKey(n) === key) return n;
-    stack.push(...n.children);
+
+// The two children of leafA/leafB's most-recent-common-ancestor: walks down while a single
+// child holds both leaves, stopping at (and returning the two children of) the node where they
+// diverge. Tolerant of polytomies -- picks out exactly the two relevant children and ignores any
+// other siblings at that node. Mirrors xprot.core.tree.resolve_partition's own MRCA walk.
+function findMRCAChildren(root, leafA, leafB) {
+  function has(n, name) { return leafNames(n).includes(name); }
+  function walk(n) {
+    if (!has(n, leafA) || !has(n, leafB)) return null;
+    for (const c of n.children) {
+      const deeper = walk(c);
+      if (deeper) return deeper;
+    }
+    const childA = n.children.find(c => has(c, leafA));
+    const childB = n.children.find(c => has(c, leafB));
+    return childA && childB ? [childA, childB] : null;
   }
-  return null;
+  return walk(root);
 }
 
 function countNewickLeaves(text) {
@@ -84,13 +89,10 @@ function countNewickLeaves(text) {
 //
 // `opts` wires up click interaction, all optional:
 //   markers      — [{tips: Set<string>, badge, color}] small letter badge drawn by a leaf
-//   selectedKey  — the sorted, comma-joined descendant-tip key of the currently selected
-//                  internal node (matches what onSelectNode is called with)
 //   isPickable   — name => cladeIndex (0/1) | null, whether/where a leaf can be clicked
-//   onSelectNode — (key) => void, called when a two-child internal node is clicked
 //   onLeafClick  — (name, cladeIndex, clientX, clientY) => void, called on a pickable leaf click
 function renderTree(content, container, highlights = [], opts = {}) {
-  const {markers = [], selectedKey = null, isPickable = null, onSelectNode = null, onLeafClick = null} = opts;
+  const {markers = [], isPickable = null, onLeafClick = null} = opts;
   const estimatedLeaves = countNewickLeaves(content);
   if (estimatedLeaves > MAX_TREE_PREVIEW_LEAVES) {
     container.textContent = `Tree preview skipped: ~${estimatedLeaves.toLocaleString()} leaves exceeds the ${MAX_TREE_PREVIEW_LEAVES.toLocaleString()} limit.`;
@@ -137,27 +139,6 @@ function renderTree(content, container, highlights = [], opts = {}) {
     if (n.children.length) {
       seg(nx, ty(n.children[0]._y), nx, ty(n.children[n.children.length - 1]._y));
       n.children.forEach(c => { seg(nx, ty(c._y), tx(c._x), ty(c._y)); draw(c); });
-
-      if (onSelectNode) {
-        const selectable = n.children.length === 2;
-        const selected = selectable && selectedKey !== null && nodeKey(n) === selectedKey;
-        const hit = document.createElementNS(NS, 'circle');
-        hit.setAttribute('cx', nx); hit.setAttribute('cy', ny);
-        hit.setAttribute('r', '4');
-        hit.setAttribute('fill', selected ? '#ffcf4d' : (selectable ? '#fff' : '#eee'));
-        hit.setAttribute('stroke', selectable ? '#595c56' : '#c7c9c5');
-        hit.setAttribute('stroke-width', selected ? '2' : '1');
-        hit.style.cursor = selectable ? 'pointer' : 'not-allowed';
-        const title = document.createElementNS(NS, 'title');
-        title.textContent = selectable
-          ? 'Click to select this internal node'
-          : 'Needs exactly two child clades to select';
-        hit.appendChild(title);
-        if (selectable) {
-          hit.addEventListener('click', e => { e.stopPropagation(); onSelectNode(nodeKey(n)); });
-        }
-        g.appendChild(hit);
-      }
     } else {
       const marker = markers.find(m => m.tips.has(n.name));
       if (marker) {

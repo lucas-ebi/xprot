@@ -30,8 +30,6 @@ def test_design_writes_all_outputs(tmp_path: Path, capsys: pytest.CaptureFixture
             str(aln_path),
             "--tree",
             str(tree_path),
-            "--node-tips",
-            "r1,a2,d1,b2",
             "--recipient",
             "r1",
             "--donor",
@@ -72,8 +70,6 @@ def test_design_threshold_flag_is_forwarded(tmp_path: Path) -> None:
             str(aln_path),
             "--tree",
             str(tree_path),
-            "--node-tips",
-            "r1,a2,d1,b2",
             "--recipient",
             "r1",
             "--donor",
@@ -105,8 +101,6 @@ def test_design_deletions_flag_emits_a_deletion(tmp_path: Path) -> None:
             str(aln_path),
             "--tree",
             str(tree_path),
-            "--node-tips",
-            "r1,a2,d1,b2",
             "--recipient",
             "r1",
             "--donor",
@@ -132,17 +126,15 @@ def test_design_dry_run_writes_nothing(tmp_path: Path) -> None:
             str(aln_path),
             "--tree",
             str(tree_path),
-            "--node-label",
-            "",
             "--recipient",
             "r1",
             "--donor",
-            "d1",
+            "ghost",
             "--dry-run",
         ]
     )
 
-    assert code == 4  # no internal node labelled ""
+    assert code == 4  # "ghost" is not a tip in the tree
 
 
 def test_design_requires_out_or_dry_run(tmp_path: Path) -> None:
@@ -175,8 +167,6 @@ def test_design_reports_exit_code_for_bad_alignment_path(tmp_path: Path) -> None
             str(tmp_path / "missing.fasta"),
             "--tree",
             str(tree_path),
-            "--node-tips",
-            "r1,a2,d1,b2",
             "--recipient",
             "r1",
             "--donor",
@@ -187,22 +177,7 @@ def test_design_reports_exit_code_for_bad_alignment_path(tmp_path: Path) -> None
     assert code == 3
 
 
-def test_design_reports_exit_code_for_same_subfamily(tmp_path: Path) -> None:
-    aln_path, tree_path = _write(tmp_path)
-    code = main(
-        [
-            "design",
-            "--alignment",
-            str(aln_path),
-            "--tree",
-            str(tree_path),
-            "--node-tips",
-            "r1,a2,d1,b2",
-            "--recipient",
-            "r1",
-            "--donor",
-            "a2",
-            "--dry-run",
-        ]
-    )
-    assert code == 5
+# The internal node is the MRCA of --recipient/--donor, which always places them in different
+# subfamilies, so this CLI has no way to trigger the "same subfamily" failure and exit code 5 is
+# unreachable through it (it stays defined for library-level callers of xprot.app.run_design that
+# pass mode=EXPANDED without a class_table, which this CLI doesn't expose).

@@ -1,18 +1,20 @@
 # X-Prot
 
-X-Prot takes a multiple sequence alignment, a phylogenetic tree, a chosen internal node, and one
-representative sequence from each of that node's two child clades. It computes weighted residue
-conservation for each clade, finds the positions where the clades are conserved differently, and
-outputs the substitutions (and insertions, and optionally deletions) that change one
-representative into a sequence carrying the other clade's conserved residues — with the alignment,
-per-position frequencies, and rule that produced each change. See
-[Scientific background](#scientific-background) for the full method.
+X-Prot takes a multiple sequence alignment, a phylogenetic tree, a recipient representative
+sequence to edit, and a donor tip identifying the clade to compare it against — their
+most-recent-common-ancestor in the tree splits into the two subfamilies being compared. It
+computes weighted residue conservation for each clade and changes the recipient representative,
+column by column, wherever the donor clade has a conserved residue it doesn't already carry —
+outputting the substitutions (and insertions, and optionally deletions), with the alignment,
+per-position frequencies, and rule that produced each change. The donor side only needs a tip to
+identify which clade plays that role: its own residues are never read, only its clade-wide
+profile. See [Scientific background](#scientific-background) for the full method.
 
 Every choice — the conservation threshold, the weighting scheme, literal vs. expanded mode — is a
 plain function parameter with a default; runs are deterministic.
 
 > [!NOTE]
-> **Status: v0.1.3, working.** The analysis pipeline is an importable library (`xprot.core`:
+> **Status: v0.2.0, working.** The analysis pipeline is an importable library (`xprot.core`:
 > alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and typicality,
 > transformation-event generation, fixture comparison), `xprot.app.run_design`, which chains the
 > whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the `x-prot`
@@ -42,14 +44,14 @@ pip install -e ".[dev]"
 ```sh
 x-prot design \
   --alignment family.fasta --tree family.nwk \
-  --node-tips seqA,seqB,seqC,seqD \
   --recipient seqA --donor seqC \
   --out results/
 ```
 
-`--node-tips` (comma-separated) or `--node-label` selects the internal node; its two child clades
-become the subfamilies. Add `--dry-run` to compute and print a one-line summary without writing
-`results/`. On success, `--out` receives `transformed.fasta`, `events.tsv`, `events.json`,
+The internal node is the most-recent-common-ancestor of `--recipient` and `--donor` in the tree;
+the two subtrees containing them become the subfamilies (any unrelated sibling branches at a
+polytomic ancestor are ignored). Add `--dry-run` to compute and print a one-line summary without
+writing `results/`. On success, `--out` receives `transformed.fasta`, `events.tsv`, `events.json`,
 `pairwise.txt`, `pairwise.json`, `summary.json`, and `diagnostics.json`.
 
 ### Browser UI
@@ -62,18 +64,19 @@ python -m http.server     # from the repository root
 ```
 
 then open `http://localhost:8000/app/`. Paste or upload an alignment and a tree, pick the
-internal node and the donor/recipient ids, and run — everything executes locally in the browser;
-nothing is uploaded. The first run downloads the Python packages Pyodide needs; later runs use the
-browser cache. Published on GitHub Pages from `/app` on `main`.
+donor and recipient ids, and run — everything executes locally in the browser; nothing is
+uploaded. The first run downloads the Python packages Pyodide needs; later runs use the browser
+cache. Published on GitHub Pages from `/app` on `main`.
 
 ## Scientific background
 
 X-Prot generalizes the evolution-based protein engineering approach that Lemos et al. (2024)
 introduced and experimentally validated — computational modeling, molecular dynamics, and
 enzymatic assays — on a transthyretin/5-hydroxyisourate hydrolase functional-switching case study,
-into reusable, family-agnostic software: pick an internal node of a phylogenetic tree, treat its
-two child clades as a donor and a recipient subfamily, and transfer the donor clade's conserved
-residues onto one recipient representative at the positions where the two subfamilies diverge.
+into reusable, family-agnostic software: take a recipient representative and a donor tip, treat
+the two subtrees under their most-recent-common-ancestor as a recipient and a donor subfamily, and
+transfer the donor clade's conserved residues onto the recipient representative at the positions
+where the two subfamilies diverge.
 
 **Sequence weighting (Henikoff & Henikoff 1994).** Before any conservation is measured, every row
 is weighted to reduce bias from over-represented sequence clusters. For sequence $i$ and alignment
@@ -110,17 +113,18 @@ In *expanded* mode the same test is applied to Taylor (1986) physicochemical cla
 individual residues, with $f_{S,j}(\text{class}) = \sum_{r\, \in\, \text{class}} f_{S,j}(r)$.
 
 **Transformation.** At each alignment column, X-Prot proposes changing the recipient
-representative's state to a donor state that is typical for the donor subfamily but *not* typical
-for the recipient subfamily — a state in
+representative's state to whichever state is typical for the donor subfamily:
 
 ```math
-\text{typical}_{donor,j} \setminus \text{typical}_{recipient,j}
+r \in \text{typical}_{donor,j}
 ```
 
-— ranking multiple candidates by donor frequency. In expanded mode the same set-difference test
-runs over classes first: a class typical for the donor but not the recipient, and not already
-carried by the recipient's current residue, is expanded back into its highest-frequency donor
-residue.
+The recipient subfamily's own conservation at that column plays no role in whether a candidate
+exists — only in the ordinary case where the representative already carries the donor-typical
+state, which is a no-op regardless. Multiple candidates (possible at a lower threshold) are ranked
+by donor frequency. In expanded mode the same test runs over classes first: a class typical for
+the donor, not already carried by the recipient's current residue, is expanded back into its
+highest-frequency donor residue.
 
 ## References
 

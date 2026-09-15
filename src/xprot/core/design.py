@@ -64,7 +64,6 @@ def generate_transformation(
             target, rule, donor_freq = _pick_target(
                 column,
                 source_state,
-                recipient_label,
                 donor_label,
                 typical_states,
                 profiles,
@@ -174,7 +173,6 @@ def _subfamily_of(canonical_id: str, partition: CanonicalPartition) -> Subfamily
 def _pick_target(
     column: int,
     source_state: str,
-    recipient_label: SubfamilyLabel,
     donor_label: SubfamilyLabel,
     typical_states: TypicalStateSet,
     profiles: ProfileSet,
@@ -185,17 +183,14 @@ def _pick_target(
     donor_freqs = donor_profile.frequencies if donor_profile else {}
 
     if mode is DesignMode.LITERAL:
-        donor_typical = typical_states.for_column(column, donor_label)
-        recipient_typical = typical_states.for_column(column, recipient_label)
-        candidates = list(donor_typical - recipient_typical)
+        candidates = list(typical_states.for_column(column, donor_label))
         if not candidates:
             return None, "", 0.0
         best = _rank_by_frequency(candidates, donor_freqs)
         return best, "literal", donor_freqs.get(best, 0.0)
 
     donor_classes = typical_states.classes_for_column(column, donor_label)
-    recipient_classes = typical_states.classes_for_column(column, recipient_label)
-    for class_name in sorted(donor_classes - recipient_classes):
+    for class_name in sorted(donor_classes):
         members = set(class_table.get(class_name, ""))
         if source_state in members:
             continue  # recipient already carries this property
