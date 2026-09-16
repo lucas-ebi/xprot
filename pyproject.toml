@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xprot"
-version = "0.2.3"
+version = "0.3.0"
 description = "Local, deterministic subfamily-conservation analysis for protein families."
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
@@ -45,7 +45,7 @@ x-prot = "xprot.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-xprot = ["py.typed"]
+xprot = ["py.typed", "vocabulary/*.yaml"]
 
 [tool.mypy]
 python_version = "3.11"

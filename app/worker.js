@@ -1,4 +1,4 @@
-// Web Worker: owns Pyodide, runs xprot.app.run_design, serves output files.
+// Web Worker: owns Pyodide, runs xprot.app.CachedRunner, serves output files.
 // Communicates with the main thread via postMessage. Runs the same, unmodified
 // xprot package the CLI uses -- this file is the only web-specific code.
 //
@@ -45,7 +45,8 @@ const XPROT_FILES = [
   '__init__.py', 'app.py', 'render.py',
   'core/__init__.py', 'core/errors.py', 'core/primitives.py', 'core/models.py',
   'core/alignment.py', 'core/tree.py', 'core/identifiers.py', 'core/weights.py',
-  'core/profile.py', 'core/design.py', 'core/classes.py',
+  'core/profile.py', 'core/design.py', 'core/vocabulary.py',
+  'vocabulary/taylor-1986.yaml',
 ];
 
 // Extension xprot's format auto-detection recognises, keyed by the <select> values used below.
@@ -65,7 +66,7 @@ async function init() {
   );
 
   postMessage({type: 'status', msg: 'Loading xprot…'});
-  for (const dir of ['xprot', 'xprot/core', 'work', 'output']) {
+  for (const dir of ['xprot', 'xprot/core', 'xprot/vocabulary', 'work', 'output']) {
     try { pyodide.FS.mkdir('/' + dir); } catch (_) {}
   }
   await Promise.all(XPROT_FILES.map(async file => {
@@ -77,7 +78,12 @@ async function init() {
     pyodide.FS.writeFile('/xprot/' + file, await res.text());
   }));
   pyodide.runPython('import sys\nif "/" not in sys.path: sys.path.insert(0, "/")');
-  await pyodide.runPythonAsync('import xprot.app, xprot.render');
+  // One CachedRunner for this worker's whole lifetime: a rerun that only swaps donor/recipient,
+  // or only tweaks the threshold, reuses whatever pipeline stages didn't actually change instead
+  // of redoing the full alignment/tree/weights/profiles chain from scratch every time.
+  await pyodide.runPythonAsync(
+    'import xprot.app, xprot.render\n_runner = xprot.app.CachedRunner()'
+  );
 
   postMessage({type: 'ready'});
 }
@@ -99,15 +105,24 @@ self.onmessage = async ({data}) => {
       pyodide.FS.writeFile(alnPath, r.alignmentText);
       pyodide.FS.writeFile(treePath, r.treeText);
 
+      const alphabetArg = r.alphabet ? `alphabet=${JSON.stringify(r.alphabet)},\n    ` : '';
+
       await pyodide.runPythonAsync(`
 from pathlib import Path
-from xprot.app import run_design
+from xprot.core.primitives import AmbiguityPolicy, DesignMode
+from xprot.core.vocabulary import DEFAULT_VOCABULARY
 from xprot.render import (
     render_events_tsv, render_events_json, render_transformed_fasta,
     render_pairwise, render_pairwise_json, render_summary_json, render_diagnostics_json,
 )
 
-_result = run_design(
+_mode = DesignMode(${JSON.stringify(r.mode)})
+# Same bundled-default-when-expanded behaviour as the CLI: expanded mode always has a
+# vocabulary, whether or not the caller supplied one of their own (not yet possible here --
+# there's no custom-vocabulary upload in the UI).
+_vocabulary = DEFAULT_VOCABULARY if _mode is DesignMode.EXPANDED else None
+
+_result = _runner.run(
     ${JSON.stringify(alnPath)}, ${JSON.stringify(treePath)},
     recipient=${JSON.stringify(r.recipient)}, donor=${JSON.stringify(r.donor)},
     threshold=${JSON.stringify(r.threshold)},
@@ -116,6 +131,9 @@ _result = run_design(
     # donor subfamily in the first place (typical_gap, off by default) -- the "Allow deletions"
     # checkbox implies both, so it does something observable rather than a no-op.
     typical_gap=${r.deletions ? 'True' : 'False'},
+    mode=_mode,
+    vocabulary=_vocabulary,
+    ${alphabetArg}ambiguous=AmbiguityPolicy(${JSON.stringify(r.ambiguous)}),
 )
 Path("/output/transformed.fasta").write_bytes(render_transformed_fasta(_result.transformed))
 Path("/output/events.tsv").write_bytes(render_events_tsv(_result.transformed.events))

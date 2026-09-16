@@ -105,27 +105,36 @@
           <span class="wiz-summary"></span>
         </button>
         <div class="wiz-collapse"><div class="wiz-body">
-          <p class="wiz-hint">Click any leaf in the tree to set the donor, then any other leaf to set the recipient.</p>
+          <p class="wiz-hint">Search for a donor and recipient below, or click leaves in the tree: first click sets the donor, second sets the recipient.</p>
+
+          <div class="tip-picker">
+            <div class="tip-search-field">
+              <label for="donor">Donor</label>
+              <div class="tip-combobox">
+                <input type="text" id="donor" class="tip-search-input" autocomplete="off" placeholder="Search tips…" required>
+                <ul class="tip-dropdown" id="donor-dropdown" hidden></ul>
+              </div>
+            </div>
+            <button type="button" id="swap-roles" class="swap-btn" title="Swap donor and recipient" aria-label="Swap donor and recipient">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 4v12"/><path d="M3 13l3 3 3-3"/>
+                <path d="M14 16V4"/><path d="M17 7l-3-3-3 3"/>
+              </svg>
+            </button>
+            <div class="tip-search-field">
+              <label for="recipient">Recipient <span class="hint">(changed toward the donor)</span></label>
+              <div class="tip-combobox">
+                <input type="text" id="recipient" class="tip-search-input" autocomplete="off" placeholder="Search tips…" required>
+                <ul class="tip-dropdown" id="recipient-dropdown" hidden></ul>
+              </div>
+            </div>
+          </div>
+
           <ul class="wiz-checklist" id="wiz-checklist">
             <li id="check-node">Node resolved</li>
             <li id="check-donor">Donor picked</li>
             <li id="check-recipient">Recipient picked</li>
           </ul>
-
-          <details class="det" style="margin-top:0.5rem">
-            <summary>Manual entry</summary>
-            <div class="det-inner">
-              <div class="ctrl-label">Representatives</div>
-              <div class="field">
-                <label for="recipient">Recipient id <span class="hint">(changed toward the donor)</span></label>
-                <input type="text" id="recipient" required>
-              </div>
-              <div class="field">
-                <label for="donor">Donor id</label>
-                <input type="text" id="donor" required>
-              </div>
-            </div>
-          </details>
         </div></div>
       </section>
 
@@ -151,6 +160,29 @@
                 <label><input type="checkbox" id="deletions"> Allow deletions</label>
                 <div class="hint">Also propose deleting a recipient residue at columns where the
                   donor subfamily is typically gapped, instead of skipping those columns.</div>
+              </div>
+              <div class="field">
+                <label for="mode">Mode</label>
+                <select id="mode">
+                  <option value="literal" selected>Literal</option>
+                  <option value="expanded">Expanded</option>
+                </select>
+                <div class="hint">Expanded proposes the donor's typical Taylor (1986)
+                  physicochemical class first, falling back to its highest-frequency residue,
+                  using the bundled Taylor table.</div>
+              </div>
+              <div class="field">
+                <label for="alphabet">Alphabet</label>
+                <input type="text" id="alphabet" placeholder="ACDEFGHIKLMNPQRSTVWY">
+                <div class="hint">Residue letters accepted in the alignment.</div>
+              </div>
+              <div class="field">
+                <label for="ambiguous">Ambiguous residues</label>
+                <select id="ambiguous">
+                  <option value="reject" selected>Reject</option>
+                  <option value="literal">Keep as literal states</option>
+                </select>
+                <div class="hint">How to handle residues outside the alphabet above.</div>
               </div>
             </div>
           </details>

@@ -30,7 +30,7 @@ def calculate_profiles(
     *,
     denominator: Denominator = Denominator.ALL_SUBFAMILY_WEIGHTS,
     occupancy_threshold: float | None = None,
-    class_table: Mapping[str, Iterable[str]] | None = None,
+    vocabulary: Mapping[str, Iterable[str]] | None = None,
 ) -> ProfileSet:
     """Per-column weighted residue (and optional class) profiles for both subfamilies.
 
@@ -105,10 +105,10 @@ def calculate_profiles(
                     occupancy=float(non_gap_count[j]) / len(member_rows),
                 )
             )
-            if class_table:
+            if vocabulary:
                 class_freqs = {
                     name: sum(frequencies.get(r, 0.0) for r in members)
-                    for name, members in class_table.items()
+                    for name, members in vocabulary.items()
                 }
                 class_profiles.append(
                     ClassProfile(

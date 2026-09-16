@@ -6,6 +6,52 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.3.0] - 2026-09-16
+
+### Added
+
+- `xprot.app.CachedRunner` — same pipeline as `run_design`, with each stage (alignment load +
+  weights, tree load, partition + profiles, typical states) memoized against its own inputs
+  instead of always recomputing from scratch. The tree partition and weighted profiles are
+  symmetric in which tip plays donor vs. recipient, so a caller that swaps `recipient`/`donor`
+  between two calls on the same `CachedRunner` reuses both untouched and only reruns the
+  transformation itself; a threshold or deletions change likewise skips straight to
+  recomputing typical states. `run_design` is now a thin wrapper around a throwaway
+  `CachedRunner` (its cache never gets a second call to pay off), so the two no longer duplicate
+  the same ~90-line orchestration. `app/`'s Web Worker keeps one `CachedRunner` alive for its
+  whole lifetime, so repeated runs in the same browser tab — not just swaps — benefit too.
+- `DesignMode.EXPANDED` (Taylor 1986 physicochemical-class typicality) and the `alphabet`/
+  `ambiguous` alignment-parsing options, previously reachable only by importing `xprot.app`/
+  `xprot.core` directly, are now exposed end to end: the CLI gets `--mode {literal,expanded}`,
+  `--vocabulary PATH`, `--alphabet STR`, and `--ambiguous {reject,literal}`; the browser UI gets
+  matching Mode/Alphabet/Ambiguous residues controls in Advanced settings. `--mode expanded`
+  needs a vocabulary either way, so both default to the bundled Taylor (1986) table when none is
+  given, rather than erroring — see the `vocabulary` renaming below for where that table now
+  lives.
+
+### Changed
+
+- `app/`'s donor/recipient picking is rewritten. The old "Manual entry" fallback text fields are
+  replaced by two always-visible, Maps-style search bars (Donor above Recipient) with a swap
+  button between them: each is a typeahead combobox pre-loaded with every tip in the current
+  tree, narrowing as you type, with arrow-key navigation and click/Enter to select — selecting a
+  tip syncs the tree highlight the same way a tree click does. Tree-click mechanics no longer use
+  a "Set as donor"/"Set as recipient"/"Clear donor"/"Clear recipient" confirmation popover: a
+  click now acts immediately from the current state — an unselected leaf fills whichever role is
+  still empty (donor first), the currently-picked donor or recipient leaf clears just that role,
+  and a third distinct leaf once both are filled is refused with a warning instead of silently
+  replacing one of them (previously, picking a leaf in an already-assigned clade would silently
+  reassign that role with no confirmation). Clicking empty tree space clears both selections.
+- Everywhere "class table" meant a `{name: residues}` YAML classification of residues (the
+  `class_table` parameter, `xprot.core.classes.load_class_table`, `ClassTableError`,
+  `class_tables/taylor-1986.yaml`, `--class-table`) is renamed to "vocabulary"
+  (`vocabulary`, `xprot.core.vocabulary.load_vocabulary`, `VocabularyError`, `--vocabulary`) —
+  plainer English, no assumed scientific basis. The bundled table also moves from a repo-root
+  `class_tables/` directory to `src/xprot/vocabulary/`, packaged as installable package data
+  (`pyproject.toml`'s `package-data`), so a `pip install`ed `x-prot` actually has a default
+  vocabulary available for `--mode expanded`, not just a source checkout — this is what makes the
+  CLI/browser default described above possible in the first place.
+
 ## [0.2.3] - 2026-09-16
 
 ### Fixed

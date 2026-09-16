@@ -47,8 +47,8 @@ def _run(
     **kw: object,
 ) -> TransformedResult:
     aln, weights, part = _setup(fasta, newick, recipient, donor)
-    table = kw.get("class_table")
-    profiles = calculate_profiles(aln, part, weights, class_table=table)  # type: ignore[arg-type]
+    table = kw.get("vocabulary")
+    profiles = calculate_profiles(aln, part, weights, vocabulary=table)  # type: ignore[arg-type]
     typical = determine_typical_states(profiles, threshold=0.9, typical_gap=typical_gap)
     return generate_transformation(
         aln,
@@ -158,7 +158,7 @@ def test_expanded_mode_uses_class_and_picks_a_member() -> None:
         recipient="r1",
         donor="d1",
         mode=DesignMode.EXPANDED,
-        class_table=table,
+        vocabulary=table,
     )
     assert result.transformed_sequence == "K"
     assert result.events[0].rule == "Basic"

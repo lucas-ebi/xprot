@@ -9,10 +9,10 @@ from __future__ import annotations
 
 __all__ = [
     "AlignmentError",
-    "ClassTableError",
     "DesignError",
     "IdentifierError",
     "TreeError",
+    "VocabularyError",
     "XProtError",
 ]
 
@@ -34,8 +34,8 @@ class IdentifierError(XProtError):
 
 
 class DesignError(XProtError):
-    """A transformation cannot be generated (bad representative, missing class table, ...)."""
+    """A transformation cannot be generated (bad representative, missing vocabulary, ...)."""
 
 
-class ClassTableError(XProtError):
-    """A class-table file is malformed."""
+class VocabularyError(XProtError):
+    """A vocabulary file is malformed."""

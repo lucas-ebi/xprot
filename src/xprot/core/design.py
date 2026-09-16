@@ -31,7 +31,7 @@ def generate_transformation(
     donor: str,
     mode: DesignMode = DesignMode.LITERAL,
     deletions: bool = False,
-    class_table: Mapping[str, str] | None = None,
+    vocabulary: Mapping[str, str] | None = None,
 ) -> TransformedResult:
     """Change the recipient representative toward the donor clade's conserved states.
 
@@ -44,8 +44,8 @@ def generate_transformation(
     if recipient_label is donor_label:
         msg = "recipient and donor must be in different subfamilies"
         raise DesignError(msg)
-    if mode is DesignMode.EXPANDED and not class_table:
-        msg = "expanded mode needs a class_table"
+    if mode is DesignMode.EXPANDED and not vocabulary:
+        msg = "expanded mode needs a vocabulary"
         raise DesignError(msg)
 
     recipient_row = alignment.row(recipient)
@@ -68,7 +68,7 @@ def generate_transformation(
                 typical_states,
                 profiles,
                 mode,
-                class_table or {},
+                vocabulary or {},
             )
 
         if target is None or target == source_state:
@@ -177,7 +177,7 @@ def _pick_target(
     typical_states: TypicalStateSet,
     profiles: ProfileSet,
     mode: DesignMode,
-    class_table: Mapping[str, str],
+    vocabulary: Mapping[str, str],
 ) -> tuple[str | None, str, float]:
     donor_profile = profiles.residue_profile(column, donor_label)
     donor_freqs = donor_profile.frequencies if donor_profile else {}
@@ -191,7 +191,7 @@ def _pick_target(
 
     donor_classes = typical_states.classes_for_column(column, donor_label)
     for class_name in sorted(donor_classes):
-        members = set(class_table.get(class_name, ""))
+        members = set(vocabulary.get(class_name, ""))
         if source_state in members:
             continue  # recipient already carries this property
         in_class = [r for r in members if donor_freqs.get(r, 0.0) > 0]

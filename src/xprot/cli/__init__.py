@@ -1,11 +1,12 @@
 """The ``x-prot`` command-line tool.
 
-Exit codes: ``0`` success, ``2`` usage error (argparse itself), ``3`` the alignment, tree, or class
-table could not be parsed, ``4`` the alignment/tree identifiers do not map one-to-one, or
+Exit codes: ``0`` success, ``2`` usage error (argparse itself), ``3`` the alignment, tree, or
+vocabulary could not be parsed, ``4`` the alignment/tree identifiers do not map one-to-one, or
 ``--recipient``/``--donor`` can't be resolved to tips in the tree, ``5`` the transformation could
-not be computed (``--recipient``/``--donor`` always resolve to different subfamilies by
-construction, so this CLI has no way to trigger it; kept for parity with
-``xprot.app.run_design``'s ``mode``/``class_table`` parameters, which this CLI doesn't expose).
+not be computed -- unreachable through this CLI: ``--recipient``/``--donor`` always resolve to
+different subfamilies by construction, and ``--vocabulary`` always has a value (the bundled
+Taylor 1986 vocabulary by default) whenever ``--mode expanded`` is set; kept for parity with
+library callers of ``xprot.app.run_design``.
 """
 
 from __future__ import annotations
@@ -16,14 +17,17 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from xprot.app import RunResult, run_design
+from xprot.core.alignment import DEFAULT_ALPHABET
 from xprot.core.errors import (
     AlignmentError,
-    ClassTableError,
     DesignError,
     IdentifierError,
     TreeError,
+    VocabularyError,
 )
+from xprot.core.primitives import AmbiguityPolicy, DesignMode
 from xprot.core.profile import DEFAULT_THRESHOLD
+from xprot.core.vocabulary import DEFAULT_VOCABULARY
 from xprot.render import (
     render_diagnostics_json,
     render_events_json,
@@ -78,12 +82,49 @@ def _build_parser() -> argparse.ArgumentParser:
             "count as typical, which is otherwise off by default)"
         ),
     )
+    design.add_argument(
+        "--mode",
+        choices=["literal", "expanded"],
+        default="literal",
+        help=(
+            "literal: propose the donor's exact typical residue (default). expanded: propose "
+            "the donor's typical Taylor (1986) physicochemical class first, falling back to its "
+            "highest-frequency residue -- see --vocabulary"
+        ),
+    )
+    design.add_argument(
+        "--vocabulary",
+        type=Path,
+        default=None,
+        help=(
+            "YAML class vocabulary for --mode expanded, same {name: residues} shape as the "
+            f"bundled default ({DEFAULT_VOCABULARY.name})"
+        ),
+    )
+    design.add_argument(
+        "--alphabet",
+        default=DEFAULT_ALPHABET,
+        help=f"residue letters accepted in the alignment (default {DEFAULT_ALPHABET!r})",
+    )
+    design.add_argument(
+        "--ambiguous",
+        choices=["reject", "literal"],
+        default="reject",
+        help=(
+            "how to handle residues outside --alphabet: reject the alignment (default), or keep "
+            "them as literal states of their own"
+        ),
+    )
     design.add_argument("--out", type=Path, help="directory to write outputs into")
     design.add_argument("--dry-run", action="store_true", help="run without writing any files")
     return parser
 
 
 def _design(args: argparse.Namespace) -> int:
+    mode = DesignMode(args.mode)
+    vocabulary = args.vocabulary
+    if mode is DesignMode.EXPANDED and vocabulary is None:
+        vocabulary = DEFAULT_VOCABULARY
     try:
         result = run_design(
             args.alignment,
@@ -93,8 +134,12 @@ def _design(args: argparse.Namespace) -> int:
             threshold=args.threshold,
             deletions=args.deletions,
             typical_gap=args.deletions,
+            mode=mode,
+            vocabulary=vocabulary,
+            alphabet=args.alphabet,
+            ambiguous=AmbiguityPolicy(args.ambiguous),
         )
-    except (AlignmentError, ClassTableError) as exc:
+    except (AlignmentError, VocabularyError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 3
     except (TreeError, IdentifierError) as exc:

@@ -96,13 +96,13 @@ def test_gap_typicality_is_gated() -> None:
     assert "-" in with_gap.for_column(1, SubfamilyLabel.A)
 
 
-def test_class_profiles_from_a_class_table() -> None:
+def test_class_profiles_from_a_vocabulary() -> None:
     # subfamily A: column all H or K -> "Basic" class (HKR) frequency 1.0
     ps = _profiles(
         ">s1\nH\n>s2\nK\n>s3\nD\n",
         ("s1", "s2"),
         ("s3",),
-        class_table={"Basic": "HKR", "Acidic": "DE"},
+        vocabulary={"Basic": "HKR", "Acidic": "DE"},
     )
     typical = determine_typical_states(ps, threshold=0.9)
     assert "Basic" in typical.classes_for_column(1, SubfamilyLabel.A)

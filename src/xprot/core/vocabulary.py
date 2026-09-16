@@ -1,0 +1,43 @@
+"""Load a vocabulary (a YAML mapping of class name -> residue letters)."""
+
+from __future__ import annotations
+
+from importlib.resources import files
+from pathlib import Path
+
+import yaml
+
+from xprot.core.errors import VocabularyError
+
+__all__ = ["DEFAULT_VOCABULARY", "load_vocabulary"]
+
+#: The one vocabulary this package ships, bundled as package data so it's available from an
+#: installed wheel and not just a source checkout (see vocabulary/*.yaml in pyproject.toml's
+#: package-data). Nothing about `vocabulary` elsewhere requires it to be this specific one -- any
+#: {name: residues} YAML in the same shape works -- this is only the CLI's and browser app's
+#: default when --mode expanded is chosen without a vocabulary of the caller's own.
+DEFAULT_VOCABULARY = Path(str(files("xprot") / "vocabulary" / "taylor-1986.yaml"))
+
+
+def load_vocabulary(path: Path | str) -> dict[str, str]:
+    """Return ``{class name: "residues"}`` from a YAML file with a top-level ``classes:`` mapping.
+
+    Overlap between classes is expected. Duplicate names or an empty class are errors.
+    """
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(raw, dict) or "classes" not in raw:
+        raise VocabularyError("vocabulary must be a mapping with a top-level 'classes' key")
+    classes = raw["classes"]
+    if not isinstance(classes, dict) or not classes:
+        raise VocabularyError("'classes' must be a non-empty mapping")
+
+    table: dict[str, str] = {}
+    for name, members in classes.items():
+        key = str(name)
+        if key in table:
+            raise VocabularyError(f"duplicate class name {key!r}")
+        residues = "".join(str(members).split())
+        if not residues:
+            raise VocabularyError(f"class {key!r} has no residues")
+        table[key] = residues
+    return table

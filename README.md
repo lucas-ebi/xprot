@@ -14,7 +14,7 @@ Every choice — the conservation threshold, the weighting scheme, literal vs. e
 plain function parameter with a default; runs are deterministic.
 
 > [!NOTE]
-> **Status: v0.2.3, working.** The analysis pipeline is an importable library (`xprot.core`:
+> **Status: v0.3.0, working.** The analysis pipeline is an importable library (`xprot.core`:
 > alignment/tree parsing, identifier mapping, Henikoff weights, weighted profiles and typicality,
 > transformation-event generation, fixture comparison), `xprot.app.run_design`, which chains the
 > whole pipeline behind one call, `xprot.render`'s deterministic output renderers, the `x-prot`
@@ -54,6 +54,12 @@ polytomic ancestor are ignored). Add `--dry-run` to compute and print a one-line
 writing `results/`. On success, `--out` receives `transformed.fasta`, `events.tsv`, `events.json`,
 `pairwise.txt`, `pairwise.json`, `summary.json`, and `diagnostics.json`.
 
+`--mode expanded` proposes the donor's typical Taylor (1986) physicochemical class instead of a
+single residue (falling back to its highest-frequency member); `--vocabulary PATH` supplies a
+custom `{name: residues}` YAML instead of the bundled Taylor table. `--alphabet` and `--ambiguous
+{reject,literal}` control which residue letters the alignment accepts and how to handle ones
+outside it.
+
 ### Browser UI
 
 `app/` is a static site (no build step, no server) that runs the same package as the CLI, in a
@@ -63,10 +69,13 @@ Web Worker, via [Pyodide](https://pyodide.org):
 python -m http.server     # from the repository root
 ```
 
-then open `http://localhost:8000/app/`. Paste or upload an alignment and a tree, pick the
-donor and recipient ids, and run — everything executes locally in the browser; nothing is
-uploaded. The first run downloads the Python packages Pyodide needs; later runs use the browser
-cache. Published on GitHub Pages from `/app` on `main`.
+then open `http://localhost:8000/app/`. Paste or upload an alignment and a tree, then pick a
+donor and recipient — search for a tip in either field, or click leaves directly in the tree
+preview (first click sets the donor, second sets the recipient; a swap button exchanges the two)
+— and run. Advanced settings expose the typicality cutoff, deletions, expanded mode, alphabet,
+and ambiguous-residue handling, matching the CLI's flags. Everything executes locally in the
+browser; nothing is uploaded. The first run downloads the Python packages Pyodide needs; later
+runs use the browser cache. Published on GitHub Pages from `/app` on `main`.
 
 ## Scientific background
 

@@ -7,7 +7,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Committed project artifacts must not carry absolute source-machine paths.
-SCANNED_DIRS = ["src", "class_tables"]
+SCANNED_DIRS = ["src"]
 NEEDLES = ("/Users/", "/home/", "\\Users\\", "XPROT_HISTORY_DIR=/", "/private/tmp/")
 
 

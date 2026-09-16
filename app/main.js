@@ -157,7 +157,6 @@ const DEFAULT_TREE_MSG =
 
 let recipientLeaf = null;
 let donorLeaf = null;
-let activeLeafPopover = null;
 let currentStep = 1;
 let viewStep = 1;
 
@@ -168,62 +167,51 @@ function resetTreeSelection() {
   document.getElementById('donor').value = '';
 }
 
-function closeLeafPopover() {
-  if (!activeLeafPopover) return;
-  activeLeafPopover.el.remove();
-  document.removeEventListener('click', activeLeafPopover.onDocClick);
-  document.removeEventListener('keydown', activeLeafPopover.onKeydown);
-  activeLeafPopover = null;
+// A click acts immediately based on current state, instead of opening a "set as donor/set as
+// recipient" confirmation popover: an unselected leaf fills whichever role is still empty
+// (donor first); the currently-donor or currently-recipient leaf clears just that role; a third
+// distinct leaf, once both roles are already filled, is refused with a warning rather than
+// silently replacing one of them -- clear a role first, then pick again.
+function handleLeafClick(name) {
+  if (name === donorLeaf) {
+    donorLeaf = null;
+    document.getElementById('donor').value = '';
+    renderTreePreview();
+  } else if (name === recipientLeaf) {
+    recipientLeaf = null;
+    document.getElementById('recipient').value = '';
+    renderTreePreview();
+  } else if (donorLeaf === null) {
+    donorLeaf = name;
+    document.getElementById('donor').value = name;
+    renderTreePreview();
+  } else if (recipientLeaf === null) {
+    recipientLeaf = name;
+    document.getElementById('recipient').value = name;
+    renderTreePreview();
+  } else {
+    showTreeWarning('Two tips already selected — click one to remove it, or click empty space to clear both.');
+  }
 }
 
-// Donor is always picked before recipient (the trait being brought in, before who receives
-// it). A leaf already holding a role is "locked": clicking it only offers to clear that role,
-// rather than re-opening the full set-as menu — reassigning happens by picking a *different*
-// leaf in the same clade instead.
-function openLeafPopover(name, cladeIdx, clientX, clientY, donorClade) {
-  closeLeafPopover();
-  const isRecipient = recipientLeaf === name;
-  const isDonor = donorLeaf === name;
+function handleTreeBackgroundClick() {
+  if (!donorLeaf && !recipientLeaf) return;
+  resetTreeSelection();
+  renderTreePreview();
+}
 
-  const pop = document.createElement('div');
-  pop.className = 'leaf-popover';
-  pop.style.left = clientX + 'px';
-  pop.style.top = clientY + 'px';
-
-  const addBtn = (label, onClick) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = label;
-    btn.addEventListener('click', () => {
-      onClick();
-      closeLeafPopover();
-      renderTreePreview();
-    });
-    pop.appendChild(btn);
-  };
-
-  if (isDonor) {
-    addBtn('Clear donor', () => { donorLeaf = null; document.getElementById('donor').value = ''; });
-  } else if (isRecipient) {
-    addBtn('Clear recipient', () => { recipientLeaf = null; document.getElementById('recipient').value = ''; });
-  } else if (donorLeaf === null || donorClade === cladeIdx) {
-    addBtn('Set as donor', () => { donorLeaf = name; document.getElementById('donor').value = name; });
-  } else {
-    addBtn('Set as recipient', () => { recipientLeaf = name; document.getElementById('recipient').value = name; });
-  }
-
-  document.body.appendChild(pop);
-  const onDocClick = e => { if (!pop.contains(e.target)) closeLeafPopover(); };
-  const onKeydown = e => { if (e.key === 'Escape') closeLeafPopover(); };
-  setTimeout(() => {
-    document.addEventListener('click', onDocClick);
-    document.addEventListener('keydown', onKeydown);
-  }, 0);
-  activeLeafPopover = {el: pop, onDocClick, onKeydown};
+let treeWarningTimeout = null;
+function showTreeWarning(msg) {
+  const hint = document.querySelector('#panel-tree .tree-hint');
+  if (!hint) return;
+  hint.textContent = msg;
+  hint.className = 'tree-hint warning';
+  clearTimeout(treeWarningTimeout);
+  treeWarningTimeout = setTimeout(renderTreePreview, 2500);
 }
 
 function renderTreePreview() {
-  closeLeafPopover();
+  clearTimeout(treeWarningTimeout);
   const panel = document.getElementById('panel-tree');
   const emptyState = document.getElementById('empty-tree');
   const msg = document.getElementById('msg-tree');
@@ -261,8 +249,6 @@ function renderTreePreview() {
 
   const highlights = [];
   const markers = [];
-  let isPickable = null;
-  let cladeOf = null;
   let hintText;
   let hintReady = false;
 
@@ -272,22 +258,18 @@ function renderTreePreview() {
       const [donorChild, recipientChild] = pair;
       const tipsDonor = new Set(leafNames(donorChild));
       const tipsRecipient = new Set(leafNames(recipientChild));
-      cladeOf = name => (tipsDonor.has(name) ? 0 : tipsRecipient.has(name) ? 1 : null);
       highlights.push({tips: tipsRecipient, color: '#3b6fb6', label: 'Recipient clade'});
       highlights.push({tips: tipsDonor, color: '#18974c', label: 'Donor clade'});
       markers.push({tips: new Set([recipientLeaf]), badge: 'R', color: '#193f90'});
       markers.push({tips: new Set([donorLeaf]), badge: 'D', color: '#0a5032'});
-      isPickable = cladeOf;
       hintText = `Donor: ${donorLeaf} (green clade, ${tipsDonor.size} tips) · `
         + `Recipient: ${recipientLeaf} (blue clade, ${tipsRecipient.size} tips) — ready to run.`;
       hintReady = true;
     }
+  } else if (donorLeaf) {
+    hintText = `Donor: ${donorLeaf}. Click any other leaf (or search above) to set the recipient.`;
   } else {
-    cladeOf = name => (name === donorLeaf ? 0 : 1);
-    isPickable = cladeOf;
-    hintText = donorLeaf
-      ? `Donor: ${donorLeaf}. Click any other leaf to set the recipient.`
-      : 'Click any leaf to set the donor.';
+    hintText = 'Click any leaf, or search above, to set the donor.';
   }
 
   emptyState.style.display = 'none';
@@ -297,12 +279,13 @@ function renderTreePreview() {
   hint.textContent = hintText;
   panel.appendChild(hint);
 
+  // Every leaf stays clickable regardless of current selection state -- handleLeafClick decides
+  // what a click does (pick, clear, or refuse a third selection) from donorLeaf/recipientLeaf.
   renderTree(treeText, panel, highlights, {
     markers,
-    isPickable,
-    onLeafClick: (name, cladeIdx, clientX, clientY) => {
-      openLeafPopover(name, cladeIdx, clientX, clientY, cladeOf(donorLeaf));
-    },
+    isPickable: () => 0,
+    onLeafClick: name => handleLeafClick(name),
+    onBackgroundClick: handleTreeBackgroundClick,
   });
 
   renderWizard();
@@ -411,6 +394,101 @@ document.getElementById('aln-format').addEventListener('change', renderWizard);
   document.getElementById(id).addEventListener('input', renderWizard);
 });
 
+// ── Donor/recipient search bars: a Maps-style pair of typeahead comboboxes over the current
+// tree's tips, plus a swap button between them. Each bar commits a pick the same way a tree
+// click does (updates donorLeaf/recipientLeaf and re-syncs the tree highlight); a bar's raw
+// text still drives stepReady/runDesign directly via the 'input' listeners above, matching the
+// tree click flow's tolerance for typos (surfaced by the backend as a "tip not in tree" error).
+function currentTreeTips() {
+  if (document.getElementById('tree-format').value !== 'newick') return [];
+  try { return leafNames(parseNewick(document.getElementById('tree-text').value)); }
+  catch (e) { return []; }
+}
+
+function setupTipCombobox(role) {
+  const input = document.getElementById(role);
+  const dropdown = document.getElementById(role + '-dropdown');
+  let activeIndex = -1;
+
+  function commit(name) {
+    input.value = name;
+    dropdown.hidden = true;
+    if (role === 'donor') donorLeaf = name; else recipientLeaf = name;
+    renderTreePreview();
+  }
+
+  function visibleOptions() {
+    return Array.from(dropdown.querySelectorAll('li:not(.no-match)'));
+  }
+
+  function setActive(index) {
+    const items = visibleOptions();
+    activeIndex = Math.max(-1, Math.min(index, items.length - 1));
+    items.forEach((li, i) => li.classList.toggle('active', i === activeIndex));
+    if (items[activeIndex]) items[activeIndex].scrollIntoView({block: 'nearest'});
+  }
+
+  function open() {
+    const tips = currentTreeTips();
+    if (!tips.length) { dropdown.hidden = true; return; }
+    const q = input.value.trim().toLowerCase();
+    const matches = q ? tips.filter(name => name.toLowerCase().includes(q)) : tips;
+    dropdown.innerHTML = '';
+    activeIndex = -1;
+    if (!matches.length) {
+      const li = document.createElement('li');
+      li.className = 'no-match';
+      li.textContent = 'No matching tips';
+      dropdown.appendChild(li);
+    } else {
+      matches.slice(0, 50).forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        li.addEventListener('mousedown', e => { e.preventDefault(); commit(name); });
+        dropdown.appendChild(li);
+      });
+    }
+    const rect = input.getBoundingClientRect();
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.top = rect.bottom + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.hidden = false;
+  }
+
+  input.addEventListener('focus', open);
+  input.addEventListener('input', open);
+  input.addEventListener('blur', () => {
+    // A mousedown on an option fires (and calls commit, which hides the dropdown) before this
+    // blur handler runs, so the short delay here only ever hides a still-open dropdown that the
+    // user dismissed some other way (e.g. tabbing away).
+    setTimeout(() => { dropdown.hidden = true; }, 150);
+    const tips = currentTreeTips();
+    const current = role === 'donor' ? donorLeaf : recipientLeaf;
+    if (tips.includes(input.value) && input.value !== current) commit(input.value);
+  });
+  input.addEventListener('keydown', e => {
+    if (dropdown.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIndex + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIndex - 1); }
+    else if (e.key === 'Enter') {
+      const items = visibleOptions();
+      if (activeIndex >= 0 && items[activeIndex]) { e.preventDefault(); commit(items[activeIndex].textContent); }
+    } else if (e.key === 'Escape') {
+      dropdown.hidden = true;
+    }
+  });
+}
+setupTipCombobox('donor');
+setupTipCombobox('recipient');
+
+document.getElementById('swap-roles').addEventListener('click', () => {
+  if (!donorLeaf && !recipientLeaf) return;
+  [donorLeaf, recipientLeaf] = [recipientLeaf, donorLeaf];
+  document.getElementById('donor').value = donorLeaf || '';
+  document.getElementById('recipient').value = recipientLeaf || '';
+  renderTreePreview();
+});
+
 let treePreviewDebounce = null;
 document.getElementById('tree-text').addEventListener('input', () => {
   resetTreeSelection();
@@ -485,6 +563,7 @@ async function runDesign() {
 
   const treeText = document.getElementById('tree-text').value;
   const thresholdVal = parseFloat(document.getElementById('threshold').value);
+  const alphabetVal = document.getElementById('alphabet').value.trim();
   const request = {
     alignmentText: document.getElementById('aln-text').value,
     alignmentFormat: document.getElementById('aln-format').value,
@@ -494,6 +573,9 @@ async function runDesign() {
     donor: document.getElementById('donor').value,
     threshold: Number.isFinite(thresholdVal) ? thresholdVal : 0.9,
     deletions: document.getElementById('deletions').checked,
+    mode: document.getElementById('mode').value,
+    alphabet: alphabetVal || null,
+    ambiguous: document.getElementById('ambiguous').value,
   };
 
   try {

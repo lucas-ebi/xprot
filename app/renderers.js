@@ -88,11 +88,13 @@ function countNewickLeaves(text) {
 // colour leaves by subfamily membership (the recipient/donor clades).
 //
 // `opts` wires up click interaction, all optional:
-//   markers      — [{tips: Set<string>, badge, color}] small letter badge drawn by a leaf
-//   isPickable   — name => cladeIndex (0/1) | null, whether/where a leaf can be clicked
-//   onLeafClick  — (name, cladeIndex, clientX, clientY) => void, called on a pickable leaf click
+//   markers          — [{tips: Set<string>, badge, color}] small letter badge drawn by a leaf
+//   isPickable        — name => cladeIndex (0/1) | null, whether/where a leaf can be clicked
+//   onLeafClick        — (name, cladeIndex, clientX, clientY) => void, called on a pickable leaf click
+//   onBackgroundClick  — () => void, called on a click that doesn't hit a leaf (leaf clicks stop
+//                        propagation, so this only fires for genuine clicks on empty tree space)
 function renderTree(content, container, highlights = [], opts = {}) {
-  const {markers = [], isPickable = null, onLeafClick = null} = opts;
+  const {markers = [], isPickable = null, onLeafClick = null, onBackgroundClick = null} = opts;
   const estimatedLeaves = countNewickLeaves(content);
   if (estimatedLeaves > MAX_TREE_PREVIEW_LEAVES) {
     container.textContent = `Tree preview skipped: ~${estimatedLeaves.toLocaleString()} leaves exceeds the ${MAX_TREE_PREVIEW_LEAVES.toLocaleString()} limit.`;
@@ -121,6 +123,7 @@ function renderTree(content, container, highlights = [], opts = {}) {
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('width', W); svg.setAttribute('height', H);
+  if (onBackgroundClick) svg.addEventListener('click', onBackgroundClick);
   const g = document.createElementNS(NS, 'g');
   g.setAttribute('transform', `translate(${PAD.l},${PAD.t})`);
   svg.appendChild(g);

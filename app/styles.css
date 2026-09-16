@@ -99,6 +99,42 @@ header nav a:hover { color: #fff; }
 .field input:disabled { background: var(--surface); color: var(--muted); }
 .field input::placeholder, .field textarea::placeholder { color: var(--placeholder); opacity: 1; }
 
+/* ── Donor/recipient tip picker (Maps-style search bars + swap) ────── */
+.tip-picker { display: flex; flex-direction: column; margin-bottom: 0.5rem; }
+.tip-search-field { display: flex; flex-direction: column; gap: 0.175rem; }
+.tip-search-field label {
+  font-size: 0.8125rem; font-weight: 600; color: var(--text);
+  display: flex; align-items: baseline; gap: 0.35rem;
+}
+.tip-search-input {
+  padding: 0.3rem 0.45rem; border: 1px solid var(--border);
+  font-size: 0.8125rem; font-family: inherit; color: var(--text);
+  background: var(--white); width: 100%;
+}
+.tip-search-input:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: var(--blue); }
+.tip-search-input::placeholder { color: var(--placeholder); opacity: 1; }
+.swap-btn {
+  display: flex; align-items: center; justify-content: center;
+  align-self: center; width: 1.75rem; height: 1.75rem; margin: -0.15rem auto;
+  border-radius: 50%; border: 1px solid var(--border);
+  background: var(--white); color: var(--blue); cursor: pointer; flex-shrink: 0;
+}
+.swap-btn:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
+/* Positioned via JS against the input's own bounding rect (like .leaf-popover already is), so
+   it escapes the sidebar's and the wizard step's own overflow:hidden ancestors instead of
+   being clipped by them. */
+.tip-dropdown {
+  position: fixed; z-index: 50; list-style: none;
+  background: var(--white); border: 1px solid var(--border);
+  box-shadow: 0 4px 10px rgba(0,0,0,.12);
+  max-height: 220px; overflow-y: auto; font-size: 0.8125rem;
+}
+.tip-dropdown[hidden] { display: none; }
+.tip-dropdown li { padding: 0.3rem 0.5rem; cursor: pointer; }
+.tip-dropdown li:hover, .tip-dropdown li.active { background: var(--blue-light); }
+.tip-dropdown li.no-match { color: var(--muted); cursor: default; }
+.tip-dropdown li.no-match:hover { background: none; }
+
 /* ── Wizard steps ────────────────────────────────────────────────── */
 .wiz-step[data-state="pending"] { display: none; }
 .wiz-header {
@@ -366,28 +402,9 @@ header nav a:hover { color: #fff; }
   font-weight: 600;
 }
 .tree-hint.ready::before { content: '✓'; }
-
-/* ── Leaf pick popover (recipient/donor role picker) ────────────────── */
-.leaf-popover {
-  position: fixed;
-  transform: translate(-50%, 10px);
-  display: flex; flex-direction: column; gap: 0.2rem;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  padding: 0.3rem;
-  z-index: 50;
+.tree-hint.warning {
+  background: #fffadc; border-left-color: #e6b800; color: #5a4500; font-weight: 600;
 }
-.leaf-popover button {
-  font-family: inherit; font-size: 0.75rem; text-align: left;
-  padding: 0.3rem 0.6rem;
-  border: 1px solid var(--border); border-radius: 3px;
-  background: var(--white); color: var(--text);
-  cursor: pointer; white-space: nowrap;
-}
-.leaf-popover button:hover:not(:disabled) { background: var(--blue-light); }
-.leaf-popover button:disabled { color: var(--muted); cursor: not-allowed; opacity: 0.55; }
 
 /* ── Results summary ─────────────────────────────────────────────── */
 .summary-wrap { display: flex; flex-direction: column; gap: 1.25rem; max-width: 480px; }
