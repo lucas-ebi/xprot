@@ -48,6 +48,20 @@ document.getElementById('controls-toggle').addEventListener('click', () => {
   setControlsCollapsed(!document.querySelector('.controls').classList.contains('collapsed'));
 });
 
+function closeAboutModal() {
+  document.getElementById('about-overlay').hidden = true;
+}
+document.getElementById('about-tag').addEventListener('click', () => {
+  document.getElementById('about-overlay').hidden = false;
+});
+document.getElementById('about-close').addEventListener('click', closeAboutModal);
+document.getElementById('about-overlay').addEventListener('click', e => {
+  if (e.target.id === 'about-overlay') closeAboutModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('about-overlay').hidden) closeAboutModal();
+});
+
 function navigateToTab(tab) {
   switchTab(document.querySelector(`.tab-btn[data-tab="${tab}"]`));
 }
@@ -344,14 +358,6 @@ function goToStep(step) {
 }
 
 function renderWizard() {
-  // The moment recipient+donor are both picked for the first time, move on to Run — but
-  // only while step 3 is still the frontier, so navigating back to review/edit it later
-  // doesn't keep bouncing the view forward.
-  if (viewStep === 3 && currentStep === 3 && stepReady(3)) {
-    goToStep(4);
-    return;
-  }
-
   document.querySelectorAll('.wiz-step').forEach(section => {
     const step = Number(section.dataset.step);
     const state = step > currentStep ? 'pending' : step === viewStep ? 'active' : 'done';
@@ -371,10 +377,22 @@ function renderWizard() {
 
   const runSummary = document.getElementById('wiz-run-summary');
   if (bothPicked) {
-    runSummary.textContent = `Donor: ${donorVal} · Recipient: ${recipientVal}`;
+    runSummary.innerHTML = '';
     runSummary.classList.add('ready');
+    const mkId = (cls, text) => {
+      const span = document.createElement('span');
+      span.className = 'summary-id ' + cls;
+      const dot = document.createElement('span');
+      dot.className = 'summary-dot';
+      span.append(dot, document.createTextNode(text));
+      return span;
+    };
+    const arrow = document.createElement('span');
+    arrow.className = 'summary-arrow';
+    arrow.textContent = '↓';
+    runSummary.append(mkId('donor', donorVal), arrow, mkId('recipient', recipientVal));
   } else {
-    runSummary.textContent = 'Select a donor and recipient in the Tree tab.';
+    runSummary.textContent = 'Pick a donor and recipient above.';
     runSummary.classList.remove('ready');
   }
 }

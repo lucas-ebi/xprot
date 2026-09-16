@@ -6,6 +6,32 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.3.1] - 2026-09-16
+
+### Changed
+
+- `app/`'s "Node & representatives" step gets an explicit "Next" button (disabled until a donor
+  and recipient are both picked), matching every other step, instead of silently auto-advancing
+  the instant both were filled — which gave no way to review or use the swap button before being
+  moved on, and left no visible path forward if you navigated back to that step later.
+- Its checklist is reordered from "Node resolved / Donor picked / Recipient picked" (a derived
+  fact listed before its own inputs) to an equation — "Donor picked + Recipient picked = Node
+  resolved" — so the dependency reads left to right.
+- The Run step's donor/recipient summary ("Donor: X · Recipient: Y" on one cramped line) is
+  replaced with the same colored-dot donor/recipient styling the Results Summary panel already
+  uses, stacked donor-then-recipient to fit the sidebar's width.
+- The active wizard step's header gets a filled, bordered bar instead of a plain underline, so it
+  reads as the focal point against the compact "done" steps around it instead of blending in.
+- "Advanced settings" is no longer collapsible -- it's directly relevant to every run, not
+  optional background reading, so it's now always visible in its own bordered panel (which also
+  gets a filled, bordered header bar in place of the old plain muted-text underline that was easy
+  to miss entirely).
+- "About X-Prot" moves out of the sidebar entirely, into a popover opened by a new "?" badge next
+  to the "X-Prot" title in the header -- background reading no longer competes with the sidebar's
+  actual inputs for space, or trails off at the bottom of a scrolling form depending on how long
+  that form happens to be. Closes on Escape, on clicking its backdrop, or via its own close
+  button.
+
 ## [0.3.0] - 2026-09-16
 
 ### Added

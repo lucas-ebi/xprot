@@ -35,7 +35,16 @@ header {
   align-items: center;
   justify-content: space-between;
 }
-header h1 { font-size: 1.0625rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+header h1 {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 1.0625rem; font-weight: 700; color: #fff; letter-spacing: -0.01em;
+}
+header h1 .help-tag {
+  width: 1.125rem; height: 1.125rem; font-size: 0.6875rem; padding: 0;
+  background: rgba(255, 255, 255, 0.25); color: #fff;
+  border: none; cursor: pointer; font-family: inherit;
+}
+header h1 .help-tag:hover { background: #fff; color: var(--green-dark); }
 header nav a { color: #a7d7b8; text-decoration: none; display: flex; align-items: center; }
 header nav a:hover { color: #fff; }
 
@@ -53,19 +62,20 @@ header nav a:hover { color: #fff; }
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 0.875rem 1rem;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   gap: 0.5rem;
 }
 .controls-toggle {
-  display: none; width: 100%; text-align: left;
+  display: none; width: 100%; text-align: left; flex-shrink: 0;
   font-family: inherit; font-size: 0.75rem; font-weight: 700;
   color: var(--muted); background: var(--white);
   border: 1px solid var(--border); border-radius: 3px;
   padding: 0.35rem 0.6rem; margin-bottom: 0.5rem; cursor: pointer;
 }
 .controls-toggle:hover { color: var(--text); background: var(--blue-light); }
+.controls-body { flex: 1; min-height: 0; overflow-y: auto; }
 .ctrl-label {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -136,6 +146,7 @@ header nav a:hover { color: #fff; }
 .tip-dropdown li.no-match:hover { background: none; }
 
 /* ── Wizard steps ────────────────────────────────────────────────── */
+.wiz-step { margin-bottom: 0.5rem; }
 .wiz-step[data-state="pending"] { display: none; }
 .wiz-header {
   display: flex; align-items: center; gap: 0.45rem; width: 100%;
@@ -145,6 +156,13 @@ header nav a:hover { color: #fff; }
 }
 .wiz-step[data-state="done"] .wiz-header { cursor: pointer; }
 .wiz-step[data-state="done"] .wiz-header:hover .wiz-title { color: var(--blue-dark); }
+/* The step actually being worked on gets a filled, bordered bar instead of a plain
+   underline, so it reads as the focal point rather than blending into the "done" steps'
+   compact summaries around it. */
+.wiz-step[data-state="active"] .wiz-header {
+  padding: 0.45rem 0.6rem; margin-bottom: 0.4rem;
+  background: var(--blue-light); border: 1px solid var(--blue); border-radius: 4px;
+}
 .wiz-num {
   width: 1.125rem; height: 1.125rem; flex-shrink: 0; border-radius: 50%;
   background: var(--border); color: var(--white);
@@ -157,7 +175,7 @@ header nav a:hover { color: #fff; }
   font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--muted);
 }
-.wiz-step[data-state="active"] .wiz-title { color: var(--text); }
+.wiz-step[data-state="active"] .wiz-title { color: var(--blue-dark); font-size: 0.75rem; }
 .wiz-summary { font-size: 0.75rem; color: var(--muted); margin-left: auto; text-align: right; }
 .wiz-collapse {
   display: grid;
@@ -182,20 +200,27 @@ header nav a:hover { color: #fff; }
   padding: 0.4rem 0.6rem; margin-bottom: 0.5rem;
   font-size: 0.75rem; color: var(--blue-dark); line-height: 1.4;
 }
-.wiz-checklist { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8125rem; }
-.wiz-checklist li {
-  position: relative; padding-left: 1.2rem; color: var(--muted);
+.node-equation {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.4rem;
+  font-size: 0.8125rem; margin-bottom: 0.5rem;
 }
-.wiz-checklist li::before {
-  content: ''; position: absolute; left: 0; top: 0.1rem;
+.eq-term { position: relative; padding-left: 1.2rem; color: var(--muted); }
+.eq-term::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
   width: 0.8rem; height: 0.8rem; line-height: 0.75rem; border-radius: 50%;
   border: 1.5px solid var(--border); background: var(--white);
   font-size: 0.55rem; text-align: center; color: var(--white);
 }
-.wiz-checklist li.done { color: var(--text); }
-.wiz-checklist li.done::before { content: '✓'; border-color: var(--green); background: var(--green); }
+.eq-term.done { color: var(--text); }
+.eq-term.done::before { content: '✓'; border-color: var(--green); background: var(--green); }
+.eq-term.eq-result.done { font-weight: 700; }
+.eq-op { color: var(--muted); font-weight: 700; }
 .wiz-run-summary { font-size: 0.8125rem; color: var(--muted); margin-bottom: 0.4rem; }
-.wiz-run-summary.ready { color: var(--text); }
+.wiz-run-summary.ready {
+  display: flex; flex-direction: column; gap: 0.25rem; color: var(--text); font-weight: 600;
+}
+.wiz-run-summary .summary-id { word-break: break-word; }
+.wiz-run-summary .summary-arrow { color: var(--muted); font-weight: 400; padding-left: 0.15rem; }
 
 /* ── File drop zone ──────────────────────────────────────────────── */
 .field label.dropzone {
@@ -217,25 +242,53 @@ header nav a:hover { color: #fff; }
 }
 .or-hint { text-align: center; margin: 0.3rem 0; }
 
-/* ── Details blocks (About) ──────────────────────────────────────── */
+/* ── Details blocks (Advanced settings, About) ──────────────────────── */
 .det > summary {
   list-style: none;
-  display: flex; align-items: center; gap: 0.35rem;
+  display: flex; align-items: center; gap: 0.4rem;
   cursor: pointer; user-select: none;
-  font-size: 0.6875rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--muted);
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
+.det > summary:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
 .det > summary::-webkit-details-marker { display: none; }
 .det > summary::before {
-  content: '▶'; font-size: 0.5rem;
+  content: '▶'; font-size: 0.55rem; color: var(--muted); flex-shrink: 0;
   transition: transform 0.15s;
 }
 .det[open] > summary::before { transform: rotate(90deg); }
-.det[open] > summary { margin-bottom: 0.5rem; }
-.det-inner { display: flex; flex-direction: column; gap: 0.5rem; }
+.det[open] > summary { border-radius: 4px 4px 0 0; }
+.help-tag {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1rem; height: 1rem; border-radius: 50%;
+  background: var(--border); color: var(--white);
+  font-size: 0.625rem; font-weight: 700; text-transform: none; letter-spacing: normal;
+}
+.det-inner {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.65rem 0.6rem;
+  background: var(--white);
+  border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 4px 4px;
+}
+/* Same header-bar look as .det > summary, but always-open and non-interactive -- for content
+   that belongs at this step every time (Advanced settings), as opposed to optional background
+   reading someone opts into (About X-Prot). */
+.det-static-title {
+  font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px 4px 0 0;
+}
+.det-static > .det-inner { margin-top: -1px; }
 
 /* ── Run / status ────────────────────────────────────────────────── */
 #run-btn {
@@ -558,6 +611,31 @@ footer {
 }
 footer a { color: var(--blue); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
+
+/* ── About modal ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay[hidden] { display: none; }
+.modal-card {
+  background: var(--white); border-radius: 6px;
+  max-width: 420px; width: 100%; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+}
+.modal-header h2 { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
+.modal-close {
+  background: none; border: none; cursor: pointer; flex-shrink: 0;
+  font-size: 1.25rem; line-height: 1; color: var(--muted); padding: 0;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 680px) {
