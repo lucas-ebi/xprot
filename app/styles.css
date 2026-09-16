@@ -58,6 +58,14 @@ header nav a:hover { color: #fff; }
   flex-direction: column;
   gap: 0.5rem;
 }
+.controls-toggle {
+  display: none; width: 100%; text-align: left;
+  font-family: inherit; font-size: 0.75rem; font-weight: 700;
+  color: var(--muted); background: var(--white);
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 0.35rem 0.6rem; margin-bottom: 0.5rem; cursor: pointer;
+}
+.controls-toggle:hover { color: var(--text); background: var(--blue-light); }
 .ctrl-label {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -305,7 +313,7 @@ header nav a:hover { color: #fff; }
 
 /* Results: several sections on one scrolling page, instead of the flex/fixed-height,
    one-panel-visible-at-a-time layout every other tab (just Tree) still uses. */
-#tab-results.active { display: block; overflow-y: auto; padding: 1.25rem; }
+#tab-results.active { display: block; overflow: auto; padding: 1.25rem; }
 .result-section { margin-bottom: 2rem; }
 .result-section:last-child { margin-bottom: 0; }
 .result-heading {
@@ -318,7 +326,7 @@ header nav a:hover { color: #fff; }
   color: var(--muted); font-size: 0.8125rem; text-align: left; padding: 0;
 }
 .result-section .panel-content {
-  display: none; flex: none; overflow: visible; padding: 0;
+  display: none; flex: none; overflow-x: auto; overflow-y: visible; padding: 0;
 }
 .result-section .panel-content.visible { display: block; }
 
@@ -483,7 +491,7 @@ header nav a:hover { color: #fff; }
 .pairwise-residue.deletion { color: var(--amber); font-weight: 700; }
 
 /* ── Files tab ───────────────────────────────────────────────────── */
-.files-content { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; }
+.files-content { flex: 1; overflow: auto; padding: 1rem 1.25rem; }
 .files-toolbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
 .output-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
 .output-table th {
@@ -541,6 +549,9 @@ footer a:hover { text-decoration: underline; }
     border-right: none; border-bottom: 1px solid var(--border);
     max-height: 45vh; -webkit-overflow-scrolling: touch;
   }
+  .controls-toggle { display: block; }
+  .controls.collapsed { max-height: none; }
+  .controls.collapsed .controls-body { display: none; }
   .tab-bar { padding: 0 0.25rem; overflow-x: auto; scrollbar-width: none; }
   .tab-bar::-webkit-scrollbar { display: none; }
   .tab-btn { padding: 0.5rem 0.625rem; font-size: 0.75rem; white-space: nowrap; }

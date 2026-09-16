@@ -26,7 +26,27 @@ function switchTab(btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  // On narrow viewports the wizard sidebar otherwise eats up to 45vh, leaving almost no room
+  // to see results -- follow the tab: Results collapses it, Tree (where the sidebar is still
+  // needed to fill in inputs) expands it back. The toggle button overrides this at any time.
+  if (isNarrowViewport()) setControlsCollapsed(btn.dataset.tab === 'results');
 }
+
+function isNarrowViewport() {
+  return window.matchMedia('(max-width: 680px)').matches;
+}
+
+function setControlsCollapsed(collapsed) {
+  const controls = document.querySelector('.controls');
+  const toggle = document.getElementById('controls-toggle');
+  controls.classList.toggle('collapsed', collapsed);
+  toggle.textContent = collapsed ? '▾ Show inputs' : '▴ Hide inputs';
+  toggle.setAttribute('aria-expanded', String(!collapsed));
+}
+
+document.getElementById('controls-toggle').addEventListener('click', () => {
+  setControlsCollapsed(!document.querySelector('.controls').classList.contains('collapsed'));
+});
 
 function navigateToTab(tab) {
   switchTab(document.querySelector(`.tab-btn[data-tab="${tab}"]`));

@@ -26,6 +26,8 @@
 
   <!-- ── Controls sidebar ──────────────────────────────────────────── -->
   <aside class="controls">
+    <button type="button" id="controls-toggle" class="controls-toggle" aria-expanded="true">▴ Hide inputs</button>
+    <div class="controls-body" id="controls-body">
     <form id="design-form" autocomplete="off">
       <section class="wiz-step" data-step="1">
         <button type="button" class="wiz-header">
@@ -190,6 +192,7 @@
         </p>
       </div>
     </details>
+    </div><!-- /controls-body -->
   </aside>
 
   <!-- ── Workspace ─────────────────────────────────────────────────── -->
@@ -270,10 +273,12 @@
           <div class="files-toolbar">
             <button type="button" class="icon-btn" onclick="downloadAllZip(this)">download all (.zip)</button>
           </div>
-          <table class="output-table">
-            <thead><tr><th>File</th><th></th><th></th></tr></thead>
-            <tbody id="output-tbody"></tbody>
-          </table>
+          <div class="table-wrap">
+            <table class="output-table">
+              <thead><tr><th>File</th><th></th><th></th></tr></thead>
+              <tbody id="output-tbody"></tbody>
+            </table>
+          </div>
           <div id="file-preview">
             <div id="file-preview-header">
               <div class="preview-title" id="preview-title"></div>

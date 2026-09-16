@@ -6,6 +6,21 @@
 
 - A contract test against an external reference alignment/tree.
 
+## [0.2.3] - 2026-09-16
+
+### Fixed
+
+- `app/`'s Results tab cropped wide content instead of scrolling it horizontally: no container
+  between `#tab-results` and the pairwise view/output files table set `overflow-x`, so a long
+  monospace sequence row or a wide output-files table clipped at the viewport edge on narrow
+  screens instead of scrolling. `#tab-results.active`, `.result-section .panel-content`, and
+  `.files-content` now scroll horizontally, and the output files table is wrapped in the same
+  `.table-wrap` container the data tables already use.
+- On mobile (≤680px) the wizard sidebar reserved up to 45vh of the viewport at all times, leaving
+  the Results tab only about half the screen. The sidebar now auto-collapses to a thin "Show
+  inputs" strip when switching to Results (and expands back on Tree), with a manual toggle to
+  override either way.
+
 ## [0.2.2] - 2026-09-15
 
 ### Added
